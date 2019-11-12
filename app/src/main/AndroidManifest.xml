@@ -22,10 +22,6 @@
             </intent-filter>
         </activity>
 
-        <meta-data
-            android:name="com.amap.api.v2.apikey"
-            android:value="5b0b18b1936e285794338fac1d987eeb"></meta-data>
-
 
     </application>
     <!--用于进行网络定位-->

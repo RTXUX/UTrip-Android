@@ -6,4 +6,5 @@
     <string name="title_login">登录</string>
     <string name="text_username">用户名</string>
     <string name="title_register">注册</string>
+    <string name="mapbox_access_token">***REMOVED***</string>
 </resources>

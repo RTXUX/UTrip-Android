@@ -2,6 +2,7 @@ package xyz.rtxux.utrip.android
 
 import android.app.Application
 import android.content.Context
+import com.mapbox.mapboxsdk.Mapbox
 import kotlin.properties.Delegates
 
 class App : Application() {
@@ -12,5 +13,6 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         CONTEXT = applicationContext
+        Mapbox.getInstance(CONTEXT, getString(R.string.mapbox_access_token))
     }
 }
