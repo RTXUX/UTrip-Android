@@ -26,6 +26,8 @@ class ExploreFragment : Fragment() {
         mainMap.onCreate(savedInstanceState)
         mainMap.getMapAsync {
             it.setStyle(Style.MAPBOX_STREETS)
+            it.uiSettings.isLogoEnabled = false
+            it.uiSettings.isAttributionEnabled = false
         }
         return root
     }
