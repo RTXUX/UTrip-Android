@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:mapbox="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="xyz.rtxux.utrip.android.ui.publish.PublishPointViewModel" />
+
+        <variable
+            name="name"
+            type="String" />
+
+        <variable
+            name="content"
+            type="String" />
+
+        <variable
+            name="viewModel"
+            type="PublishPointViewModel" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context=".ui.publish.PublishPointFragment">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/white">
+
+            <ScrollView
+                android:id="@+id/layout_add"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="10dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="112dp">
+
+                        <LinearLayout
+                            android:id="@+id/layout_addimg"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:orientation="horizontal"
+                            android:paddingLeft="10dp"
+                            android:paddingTop="20dp"
+                            android:paddingRight="10dp"
+                            android:paddingBottom="20dp">
+
+                            <ImageView
+                                android:layout_width="50dp"
+                                android:layout_height="50dp"
+                                android:src="@drawable/ic_add_white_24dp"
+                                android:tint="@color/colorPrimary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="添加图片"
+                                android:textSize="18sp" />
+
+                        </LinearLayout>
+
+                        <HorizontalScrollView
+                            android:id="@+id/sv_img"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:visibility="gone">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:orientation="horizontal">
+
+                                <LinearLayout
+                                    android:id="@+id/layout_img"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="match_parent"
+                                    android:orientation="horizontal" />
+
+                                <LinearLayout
+                                    android:id="@+id/layout_addimg2"
+                                    android:layout_width="63dp"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical"
+                                    android:padding="5dp">
+
+                                    <ImageView
+                                        android:layout_width="40dp"
+                                        android:layout_height="40dp"
+                                        android:layout_marginTop="10dp"
+                                        android:src="@drawable/ic_add_white_24dp"
+                                        android:tint="@color/colorPrimary" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="5dp"
+                                        android:text="添加"
+                                        android:textSize="18sp" />
+                                </LinearLayout>
+                            </LinearLayout>
+                        </HorizontalScrollView>
+
+                    </FrameLayout>
+
+                    <EditText
+                        android:id="@+id/et_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:hint="标题" />
+
+                    <EditText
+                        android:id="@+id/et_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_input"
+                        android:gravity="start|top"
+                        android:hint="内容"
+                        android:minHeight="200dp"
+                        android:padding="5dp" />
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="150dp"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center">
+
+                        <com.mapbox.mapboxsdk.maps.MapView
+                            android:id="@+id/pickMap"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            mapbox:mapbox_cameraZoom="15">
+
+                            <ImageView
+                                android:id="@+id/imageView"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_location_on_white_24dp"
+                                android:tint="@color/colorAccent" />
+                        </com.mapbox.mapboxsdk.maps.MapView>
+
+                    </FrameLayout>
+
+
+                </LinearLayout>
+            </ScrollView>
+
+        </FrameLayout>
+
+
+    </LinearLayout>
+</layout>

@@ -6,12 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.Style
-import kotlinx.android.synthetic.main.fragment_explore.*
 import xyz.rtxux.utrip.android.R
 
 class ExploreFragment : Fragment() {
+
+    private lateinit var mainMap: MapView
 
     private lateinit var exploreViewModel: ExploreViewModel
     override fun onCreateView(
@@ -22,14 +25,20 @@ class ExploreFragment : Fragment() {
         exploreViewModel =
             ViewModelProviders.of(this).get(ExploreViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_explore, container, false)
-        val mainMap = root.findViewById<MapView>(R.id.mainMap)
+        mainMap = root.findViewById<MapView>(R.id.mainMap)
         mainMap.onCreate(savedInstanceState)
         mainMap.getMapAsync {
             it.setStyle(Style.MAPBOX_STREETS)
             it.uiSettings.isLogoEnabled = false
             it.uiSettings.isAttributionEnabled = false
         }
+        root.findViewById<FloatingActionButton>(R.id.publishButton)
+            .setOnClickListener { onFabClicked() }
         return root
+    }
+
+    fun onFabClicked() {
+        findNavController().navigate(ExploreFragmentDirections.actionNavigationExploreToPublishPointFragment())
     }
 
     override fun onStart() {

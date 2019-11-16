@@ -9,7 +9,11 @@
         android:id="@+id/navigation_explore"
         android:name="xyz.rtxux.utrip.android.ui.explore.ExploreFragment"
         android:label="@string/title_explore"
-        tools:layout="@layout/fragment_explore" />
+        tools:layout="@layout/fragment_explore">
+        <action
+            android:id="@+id/action_navigation_explore_to_publishPointFragment"
+            app:destination="@id/publishPointFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_track"
@@ -22,4 +26,8 @@
         android:name="xyz.rtxux.utrip.android.ui.profile.ProfileFragment"
         android:label="@string/title_profile"
         tools:layout="@layout/fragment_profile" />
+    <fragment
+        android:id="@+id/publishPointFragment"
+        android:name="xyz.rtxux.utrip.android.ui.publish.PublishPointFragment"
+        android:label="发布" />
 </navigation>
