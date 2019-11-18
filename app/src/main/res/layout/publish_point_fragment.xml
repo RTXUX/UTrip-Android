@@ -120,6 +120,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
+                        android:text="@={name}"
                         android:hint="标题" />
 
                     <EditText
@@ -129,6 +130,7 @@
                         android:background="@drawable/bg_input"
                         android:gravity="start|top"
                         android:hint="内容"
+                        android:text="@={content}"
                         android:minHeight="200dp"
                         android:padding="5dp" />
 

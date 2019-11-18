@@ -29,7 +29,7 @@ object RetrofitClient {
             .create(ApiService::class.java)
     }
 
-    private val client: OkHttpClient
+    val client: OkHttpClient
         get() {
             val builder = OkHttpClient.Builder()
             val logging = HttpLoggingInterceptor()

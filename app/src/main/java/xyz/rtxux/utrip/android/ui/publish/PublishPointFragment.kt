@@ -12,6 +12,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.modes.CameraMode
@@ -19,15 +20,26 @@ import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import kotlinx.android.synthetic.main.layout_dialog_imgtype.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import xyz.rtxux.utrip.android.R
 import xyz.rtxux.utrip.android.base.BaseVMFragment
 import xyz.rtxux.utrip.android.databinding.PublishPointFragmentBinding
+import xyz.rtxux.utrip.android.model.UResult
+import xyz.rtxux.utrip.android.model.repository.ImageRepository
+import xyz.rtxux.utrip.android.model.repository.PointRepository
 import xyz.rtxux.utrip.android.utils.CommonUtils
+import xyz.rtxux.utrip.android.utils.toast
+import xyz.rtxux.utrip.server.model.dto.LocationBean
+import xyz.rtxux.utrip.server.model.dto.PointDTO
 
 class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointFragmentBinding>(
     true,
     PublishPointViewModel::class.java
 ) {
+    private val imageRepository by lazy { ImageRepository() }
+    private val pointRepository by lazy { PointRepository() }
     override fun getLayoutResId(): Int = R.layout.publish_point_fragment
     private val imageList = mutableListOf<Bitmap>()
     private lateinit var viewModel: PublishPointViewModel
@@ -184,7 +196,39 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.buttonConfirmPublish -> {
-                this.findNavController().navigateUp()
+                viewModel.viewModelScope.launch {
+                    val imageIds = mutableListOf<Int>()
+                    withContext((Dispatchers.IO)) {
+                        for (image in imageList) {
+                            launch {
+                                val imagePreUploadVO =
+                                    (imageRepository.preUploadImage() as UResult.Success).data
+                                imageRepository.uploadImage(image, imagePreUploadVO)
+                                imageIds.add(imagePreUploadVO.id)
+                            }
+                        }
+                    }
+                    val target = mapboxMap.cameraPosition.target
+                    val pointDTO = PointDTO(
+                        name = mBinding.name!!,
+                        description = mBinding.content!!,
+                        images = imageIds,
+                        associatedTrack = null,
+                        location = LocationBean("WGS-84", target.latitude, target.longitude)
+                    )
+                    val res = pointRepository.createPoint(pointDTO)
+                    when (res) {
+                        is UResult.Success -> {
+                            toast("发布成功")
+                            withContext(Dispatchers.Main) {
+                                this@PublishPointFragment.findNavController().navigateUp()
+                            }
+                        }
+                        is UResult.Error -> {
+                            toast(res.exception.message!!)
+                        }
+                    }
+                }
             }
         }
         return super.onOptionsItemSelected(item)

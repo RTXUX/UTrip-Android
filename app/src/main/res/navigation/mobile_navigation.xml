@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_navigation_explore_to_publishPointFragment"
             app:destination="@id/publishPointFragment" />
+        <action
+            android:id="@+id/action_navigation_explore_to_pointInfoFragment"
+            app:destination="@id/pointInfoFragment" />
     </fragment>
 
     <fragment
@@ -30,4 +33,12 @@
         android:id="@+id/publishPointFragment"
         android:name="xyz.rtxux.utrip.android.ui.publish.PublishPointFragment"
         android:label="发布" />
+    <fragment
+        android:id="@+id/pointInfoFragment"
+        android:name="xyz.rtxux.utrip.android.ui.point.PointInfoFragment"
+        android:label="详情">
+        <argument
+            android:name="pointId"
+            app:argType="integer" />
+    </fragment>
 </navigation>

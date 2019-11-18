@@ -21,7 +21,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        <!--        <meta-data android:name="xyz.rtxux.utrip.android.base.MyOkHttpGlideModule"-->
+        <!--            android:value="GlideModule"/>-->
 
     </application>
     <!--用于进行网络定位-->

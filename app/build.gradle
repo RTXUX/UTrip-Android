@@ -61,6 +61,15 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     //implementation 'com.amap.api:3dmap:latest.integration'
     implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:8.4.0'
+    implementation 'com.qiniu:qiniu-android-sdk:7.5.0'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    implementation 'com.github.tbruyelle:rxpermissions:0.10.2'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.14'
+    implementation 'com.mapbox.mapboxsdk:mapbox-android-plugin-annotation-v8:0.7.0'
+    implementation "com.youth.banner:banner:1.4.10"
+    implementation "com.github.bumptech.glide:glide:4.10.0"
+    kapt "com.github.bumptech.glide:compiler:4.10.0"
+    implementation "com.github.bumptech.glide:okhttp3-integration:4.10.0"
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
