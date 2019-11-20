@@ -37,7 +37,7 @@ import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class ExploreFragment : Fragment() {
-
+    @SuppressLint("NotChinaMapView")
     private lateinit var mainMap: MapView
     private lateinit var mapboxMap: MapboxMap
     private lateinit var exploreViewModel: ExploreViewModel

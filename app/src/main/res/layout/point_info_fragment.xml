@@ -121,7 +121,7 @@
                         android:layout_height="5dp"
                         android:background="#f5f5f5" />
 
-                    <com.mapbox.mapboxsdk.maps.MapView
+                    <xyz.rtxux.utrip.android.widgets.CustomMapView
                         android:id="@+id/infoMap"
                         android:layout_width="match_parent"
                         android:layout_height="200dp"

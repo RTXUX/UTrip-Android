@@ -49,6 +49,7 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
     ): View {
         val res = super.onCreateView(inflater, container, savedInstanceState)
         mBinding.viewModel = mViewModel
+        mBinding.infoMap.mParentView = mBinding.layoutScroll
         mBinding.infoMap.onCreate(savedInstanceState)
         initView()
         initData()

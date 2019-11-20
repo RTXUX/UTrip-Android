@@ -16,11 +16,15 @@ abstract class BaseRepository {
         return try {
             call()
         } catch (e: HttpException) {
-            val response = Gson().fromJson<ApiResponse<Nothing>>(
-                e.response()?.errorBody()?.charStream(),
-                ApiResponse::class.java
-            )
-            executeResponse(response)
+            try {
+                val response = Gson().fromJson<ApiResponse<Nothing>>(
+                    e.response()?.errorBody()?.charStream(),
+                    ApiResponse::class.java
+                )
+                executeResponse(response)
+            } catch (e: Exception) {
+                UResult.Error(e)
+            }
         } catch (e: Exception) {
             UResult.Error(IOException(errorMessage, e))
         }
