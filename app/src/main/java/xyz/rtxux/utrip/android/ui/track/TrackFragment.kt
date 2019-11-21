@@ -4,10 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import xyz.rtxux.utrip.android.R
 
 class TrackFragment : Fragment() {
@@ -22,10 +22,9 @@ class TrackFragment : Fragment() {
         trackViewModel =
             ViewModelProviders.of(this).get(TrackViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_track, container, false)
-        val textView: TextView = root.findViewById(R.id.text_dashboard)
-        trackViewModel.text.observe(this, Observer {
-            textView.text = it
-        })
+        root.findViewById<FloatingActionButton>(R.id.beginTrack).setOnClickListener {
+            findNavController().navigate(R.id.action_navigation_track_to_trackingFragment)
+        }
         return root
     }
 }

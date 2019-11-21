@@ -8,6 +8,7 @@ import xyz.rtxux.utrip.android.model.bean.RegisterVO
 import xyz.rtxux.utrip.server.model.dto.PointDTO
 import xyz.rtxux.utrip.server.model.vo.ImagePreUploadVO
 import xyz.rtxux.utrip.server.model.vo.PointVO
+import xyz.rtxux.utrip.server.model.vo.UserProfileVO
 
 interface ApiService {
     companion object {
@@ -40,4 +41,7 @@ interface ApiService {
 
     @GET("/point/{id}")
     suspend fun getPointVO(@Path("id") pointId: Int): ApiResponse<PointVO>
+
+    @GET("/user/{id}/profile")
+    suspend fun getUserProfileVO(@Path("id") userId: Int): ApiResponse<UserProfileVO>
 }

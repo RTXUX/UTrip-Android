@@ -43,6 +43,7 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
     private lateinit var mapboxMap: MapboxMap
     override fun getLayoutResId(): Int = R.layout.point_info_fragment
     private val pointId: Int by lazy { arguments!!["pointId"] as Int }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -82,6 +83,9 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
                 "${ApiService.API_BASE}/image/${it}"
             })
             mBinding.banner.start()
+        })
+        mViewModel.userProfile.observe(this, Observer {
+            GlideApp.with(context!!).load(it.avatarUrl).into(mBinding.ivAvatar)
         })
     }
 

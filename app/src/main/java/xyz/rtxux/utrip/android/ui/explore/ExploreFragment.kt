@@ -29,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.rtxux.utrip.android.R
+import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
 import xyz.rtxux.utrip.android.model.UResult
 import xyz.rtxux.utrip.android.model.repository.PointRepository
 import xyz.rtxux.utrip.android.utils.toast
@@ -49,7 +50,7 @@ class ExploreFragment : Fragment() {
     private val symbolToPointVO = mutableMapOf<Symbol, PointVO>()
     private val pointVOToSymbol = mutableMapOf<PointVO, Symbol>()
     private val markerLock: ReadWriteLock = ReentrantReadWriteLock()
-
+    private lateinit var mapViewLifecycleObserver: MapViewLifeCycleBean
     companion object {
         private val ID_ICON_LOC = "LOC_ICON_1"
     }
@@ -64,6 +65,8 @@ class ExploreFragment : Fragment() {
         val root = inflater.inflate(R.layout.fragment_explore, container, false)
         mainMap = root.findViewById<MapView>(R.id.mainMap)
         mainMap.onCreate(savedInstanceState)
+        mapViewLifecycleObserver =
+            MapViewLifeCycleBean(mainMap).apply { lifecycle.addObserver(this) }
         mainMap.getMapAsync {
             mapboxMap = it
             it.setStyle(
@@ -176,42 +179,21 @@ class ExploreFragment : Fragment() {
 
     }
 
-    override fun onStart() {
-        super.onStart()
-        mainMap.onStart()
-    }
-
-    override fun onStop() {
-        mainMap.onStop()
-        super.onStop()
-    }
 
     override fun onDestroyView() {
         locationComponent.isLocationComponentEnabled = false
         mainMap.onDestroy()
+        Log.d(this.javaClass.simpleName, "View Destroyed")
         super.onDestroyView()
     }
 
     override fun onPause() {
-        mainMap.onPause()
+        //mainMap.onPause()
         symbolManager.deleteAll()
         symbolToPointVO.clear()
         pointVOToSymbol.clear()
         super.onPause()
     }
 
-    override fun onResume() {
-        super.onResume()
-        mainMap.onResume()
-    }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        mainMap.onSaveInstanceState(outState)
-        super.onSaveInstanceState(outState)
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        mainMap.onLowMemory()
-    }
 }

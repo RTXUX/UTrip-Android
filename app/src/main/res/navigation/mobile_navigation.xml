@@ -22,7 +22,11 @@
         android:id="@+id/navigation_track"
         android:name="xyz.rtxux.utrip.android.ui.track.TrackFragment"
         android:label="@string/title_track"
-        tools:layout="@layout/fragment_track" />
+        tools:layout="@layout/fragment_track">
+        <action
+            android:id="@+id/action_navigation_track_to_trackingFragment"
+            app:destination="@id/trackingFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_profile"
@@ -41,4 +45,8 @@
             android:name="pointId"
             app:argType="integer" />
     </fragment>
+    <fragment
+        android:id="@+id/trackingFragment"
+        android:name="xyz.rtxux.utrip.android.ui.tracking.TrackingFragment"
+        android:label="记录中" />
 </navigation>

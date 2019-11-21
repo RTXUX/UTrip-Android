@@ -4,13 +4,20 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.ViewParent
+import androidx.lifecycle.LifecycleObserver
 import com.mapbox.mapboxsdk.maps.MapView
+import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
 
 class CustomMapView(
     context: Context,
     attrs: AttributeSet?,
-    defStyle: Int
-) : MapView(context, attrs, defStyle) {
+    defStyle: Int,
+    b: MapViewLifeCycleBean = MapViewLifeCycleBean()
+) : MapView(context, attrs, defStyle), LifecycleObserver by b {
+    init {
+        b.setMapView(this)
+    }
+
     var mParentView: ViewParent? = null
 
     constructor(context: Context) : this(context, null, 0)

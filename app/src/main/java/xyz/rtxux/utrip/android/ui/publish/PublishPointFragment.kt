@@ -11,7 +11,6 @@ import android.view.*
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
-import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
@@ -42,7 +41,6 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
     private val pointRepository by lazy { PointRepository() }
     override fun getLayoutResId(): Int = R.layout.publish_point_fragment
     private val imageList = mutableListOf<Bitmap>()
-    private lateinit var viewModel: PublishPointViewModel
     private lateinit var mapboxMap: MapboxMap
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -50,8 +48,7 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
     ): View {
         val ret = super.onCreateView(inflater, container, savedInstanceState)
         setHasOptionsMenu(true)
-        viewModel = ViewModelProviders.of(this).get(PublishPointViewModel::class.java)
-        mBinding.viewModel = viewModel
+        mBinding.viewModel = mViewModel
         initMap(savedInstanceState)
         initView()
         return ret
@@ -145,12 +142,60 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
     }
 
     fun pickPhoto() {
-        startActivityForResult(
-            Intent(
-                Intent.ACTION_PICK,
-                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-            ), 1
-        )
+//        startActivityForResult(
+//            Intent(
+//                Intent.ACTION_PICK,
+//                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+//            ), 1
+//        )
+        launch {
+            val result = startActivityForResultKtx(
+                Intent(
+                    Intent.ACTION_PICK,
+                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                )
+            ).await()
+            if (result.resultCode == RESULT_OK && result.data != null) {
+                val selectedImage = result.data.data
+                val filePathColumn = arrayOf(MediaStore.Images.Media.DATA)
+                selectedImage?.let {
+                    val cursor = activity!!.contentResolver.query(
+                        selectedImage,
+                        filePathColumn,
+                        null,
+                        null,
+                        null
+                    )
+                    if (cursor != null) {
+                        cursor.moveToFirst()
+                        val columnIndex = cursor.getColumnIndex(filePathColumn[0])
+                        val picturePath = cursor.getString(columnIndex)
+                        cursor.close()
+                        val opts = BitmapFactory.Options()
+                        opts.inJustDecodeBounds = true
+                        BitmapFactory.decodeFile(picturePath, opts)
+                        //debug(msg = "" + opts.outWidth + " " + opts.outHeight)
+                        val less = if (opts.outWidth > opts.outHeight)
+                            opts.outHeight
+                        else
+                            opts.outWidth
+                        var i = 1
+                        if (less > 720) {
+                            i = 2
+                            while (less / i > 720) {
+                                i += 2
+                            }
+                        }
+                        opts.inSampleSize = i
+                        opts.inJustDecodeBounds = false
+                        val bitmap = BitmapFactory.decodeFile(picturePath, opts)
+                        // debug(msg = "" + opts.outWidth + " " + opts.outHeight)
+                        addImg(bitmap)
+
+                    }
+                }
+            }
+        }
     }
 
     override fun onStart() {
@@ -196,7 +241,7 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.buttonConfirmPublish -> {
-                viewModel.viewModelScope.launch {
+                mViewModel.viewModelScope.launch {
                     val imageIds = mutableListOf<Int>()
                     withContext((Dispatchers.IO)) {
                         for (image in imageList) {
@@ -234,53 +279,53 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        when (requestCode) {
-            1 -> {
-                if (resultCode == RESULT_OK && data != null) {
-                    val selectedImage = data.data
-                    val filePathColumn = arrayOf(MediaStore.Images.Media.DATA)
-                    selectedImage?.let {
-                        val cursor = activity!!.contentResolver.query(
-                            selectedImage,
-                            filePathColumn,
-                            null,
-                            null,
-                            null
-                        )
-                        if (cursor != null) {
-                            cursor.moveToFirst()
-                            val columnIndex = cursor.getColumnIndex(filePathColumn[0])
-                            val picturePath = cursor.getString(columnIndex)
-                            cursor.close()
-                            val opts = BitmapFactory.Options()
-                            opts.inJustDecodeBounds = true
-                            BitmapFactory.decodeFile(picturePath, opts)
-                            //debug(msg = "" + opts.outWidth + " " + opts.outHeight)
-                            val less = if (opts.outWidth > opts.outHeight)
-                                opts.outHeight
-                            else
-                                opts.outWidth
-                            var i = 1
-                            if (less > 720) {
-                                i = 2
-                                while (less / i > 720) {
-                                    i += 2
-                                }
-                            }
-                            opts.inSampleSize = i
-                            opts.inJustDecodeBounds = false
-                            val bitmap = BitmapFactory.decodeFile(picturePath, opts)
-                            // debug(msg = "" + opts.outWidth + " " + opts.outHeight)
-                            addImg(bitmap)
-
-                        }
-                    }
-                }
-            }
-            else -> {
-                super.onActivityResult(requestCode, resultCode, data)
-            }
-        }
-    }
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        when (requestCode) {
+//            1 -> {
+//                if (resultCode == RESULT_OK && data != null) {
+//                    val selectedImage = data.data
+//                    val filePathColumn = arrayOf(MediaStore.Images.Media.DATA)
+//                    selectedImage?.let {
+//                        val cursor = activity!!.contentResolver.query(
+//                            selectedImage,
+//                            filePathColumn,
+//                            null,
+//                            null,
+//                            null
+//                        )
+//                        if (cursor != null) {
+//                            cursor.moveToFirst()
+//                            val columnIndex = cursor.getColumnIndex(filePathColumn[0])
+//                            val picturePath = cursor.getString(columnIndex)
+//                            cursor.close()
+//                            val opts = BitmapFactory.Options()
+//                            opts.inJustDecodeBounds = true
+//                            BitmapFactory.decodeFile(picturePath, opts)
+//                            //debug(msg = "" + opts.outWidth + " " + opts.outHeight)
+//                            val less = if (opts.outWidth > opts.outHeight)
+//                                opts.outHeight
+//                            else
+//                                opts.outWidth
+//                            var i = 1
+//                            if (less > 720) {
+//                                i = 2
+//                                while (less / i > 720) {
+//                                    i += 2
+//                                }
+//                            }
+//                            opts.inSampleSize = i
+//                            opts.inJustDecodeBounds = false
+//                            val bitmap = BitmapFactory.decodeFile(picturePath, opts)
+//                            // debug(msg = "" + opts.outWidth + " " + opts.outHeight)
+//                            addImg(bitmap)
+//
+//                        }
+//                    }
+//                }
+//            }
+//            else -> {
+//                super.onActivityResult(requestCode, resultCode, data)
+//            }
+//        }
+//    }
 }
