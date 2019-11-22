@@ -3,6 +3,7 @@ package xyz.rtxux.utrip.android.ui.point
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import android.widget.ImageView
@@ -28,6 +29,7 @@ import xyz.rtxux.utrip.android.base.GlideApp
 import xyz.rtxux.utrip.android.databinding.PointInfoFragmentBinding
 import xyz.rtxux.utrip.android.model.api.ApiService
 import xyz.rtxux.utrip.android.model.api.RetrofitClient
+import xyz.rtxux.utrip.android.ui.zoomview.ImageZoomActivity
 import xyz.rtxux.utrip.android.utils.toast
 import java.text.SimpleDateFormat
 import java.util.*
@@ -93,9 +95,15 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
         mViewModel.point.observe(this, Observer {
             mBinding.tvTime.text =
                 SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(Date(it.timestamp)).toString()
-            mBinding.banner.setImages(it.images.map {
+            val imageUrls = it.images.map {
                 "${ApiService.API_BASE}/image/${it}"
-            })
+            }
+            mBinding.banner.setImages(imageUrls)
+            mBinding.banner.setOnBannerListener { position ->
+                startActivity(Intent(context, ImageZoomActivity::class.java).apply {
+                    putExtra("url", imageUrls[position])
+                })
+            }
             mBinding.banner.start()
         })
         mViewModel.userProfile.observe(this, Observer {

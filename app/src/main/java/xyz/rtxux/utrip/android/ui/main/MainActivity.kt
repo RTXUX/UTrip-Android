@@ -9,7 +9,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import xyz.rtxux.utrip.android.R
 import xyz.rtxux.utrip.android.base.BaseActivity
 import xyz.rtxux.utrip.android.model.UResult
@@ -33,12 +33,12 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
-        launch {
+        runBlocking {
             val validationResult = authRepository.validate()
             when (validationResult) {
                 is UResult.Success -> {
                     RetrofitClient.userId = validationResult.data.userId
-                    return@launch
+                    return@runBlocking
                 }
                 is UResult.Error -> {
                     Toast.makeText(
