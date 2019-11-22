@@ -45,4 +45,11 @@ class PointRepository : BaseRepository() {
             "删除点失败"
         )
     }
+
+    suspend fun findByUser(userId: Int): UResult<List<PointVO>> {
+        return safeApiCall(
+            { executeResponse(RetrofitClient.service.findPointByUser(userId)) },
+            "未能获取点"
+        )
+    }
 }

@@ -32,7 +32,11 @@
         android:id="@+id/navigation_profile"
         android:name="xyz.rtxux.utrip.android.ui.profile.ProfileFragment"
         android:label="@string/title_profile"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile">
+        <action
+            android:id="@+id/action_navigation_profile_to_myPointFragment"
+            app:destination="@id/myPointFragment" />
+    </fragment>
     <fragment
         android:id="@+id/publishPointFragment"
         android:name="xyz.rtxux.utrip.android.ui.publish.PublishPointFragment"
@@ -49,4 +53,12 @@
         android:id="@+id/trackingFragment"
         android:name="xyz.rtxux.utrip.android.ui.tracking.TrackingFragment"
         android:label="记录中" />
+    <fragment
+        android:id="@+id/myPointFragment"
+        android:name="xyz.rtxux.utrip.android.ui.mypoint.MyPointFragment"
+        android:label="我的发布">
+        <action
+            android:id="@+id/action_myPointFragment_to_pointInfoFragment"
+            app:destination="@id/pointInfoFragment" />
+    </fragment>
 </navigation>

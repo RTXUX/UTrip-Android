@@ -52,4 +52,7 @@ interface ApiService {
 
     @DELETE("/point/{id}")
     suspend fun deletePoint(@Path("id") pointId: Int): ApiResponse<Dummy>
+
+    @GET("/point")
+    suspend fun findPointByUser(@Query("userId") userId: Int): ApiResponse<List<PointVO>>
 }

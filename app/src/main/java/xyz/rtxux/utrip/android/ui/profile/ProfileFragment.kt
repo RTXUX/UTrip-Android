@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.launch
 import xyz.rtxux.utrip.android.R
 import xyz.rtxux.utrip.android.base.BaseVMFragment
@@ -35,6 +36,9 @@ class ProfileFragment :
         mViewModel.userProfileVO.observe(this, Observer {
             GlideApp.with(context!!).load(it.avatarUrl).into(mBinding.ivAvatar)
         })
+        mBinding.layoutMyPoints.setOnClickListener {
+            findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToMyPointFragment())
+        }
         return ret
     }
 }
