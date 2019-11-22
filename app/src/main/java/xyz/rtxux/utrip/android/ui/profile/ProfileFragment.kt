@@ -1,31 +1,40 @@
 package xyz.rtxux.utrip.android.ui.profile
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import kotlinx.coroutines.launch
 import xyz.rtxux.utrip.android.R
+import xyz.rtxux.utrip.android.base.BaseVMFragment
+import xyz.rtxux.utrip.android.base.GlideApp
+import xyz.rtxux.utrip.android.databinding.FragmentProfileBinding
+import xyz.rtxux.utrip.android.model.repository.AuthRepository
+import xyz.rtxux.utrip.android.ui.auth.AuthActivity
 
-class ProfileFragment : Fragment() {
-
-    private lateinit var profileViewModel: ProfileViewModel
+class ProfileFragment :
+    BaseVMFragment<ProfileViewModel, FragmentProfileBinding>(true, ProfileViewModel::class.java) {
+    override fun getLayoutResId(): Int = R.layout.fragment_profile
+    private val authRepository by lazy { AuthRepository() }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        profileViewModel =
-            ViewModelProviders.of(this).get(ProfileViewModel::class.java)
-        val root = inflater.inflate(R.layout.fragment_profile, container, false)
-        val textView: TextView = root.findViewById(R.id.text_notifications)
-        profileViewModel.text.observe(this, Observer {
-            textView.text = it
+    ): View {
+        val ret = super.onCreateView(inflater, container, savedInstanceState)
+        mBinding.viewModel = mViewModel
+        mViewModel.loadUserProfileVO()
+        mBinding.buttonLogout.setOnClickListener {
+            launch { authRepository.logout() }
+            startActivity(Intent(context, AuthActivity::class.java))
+            activity?.finish()
+        }
+        mViewModel.userProfileVO.observe(this, Observer {
+            GlideApp.with(context!!).load(it.avatarUrl).into(mBinding.ivAvatar)
         })
-        return root
+        return ret
     }
 }

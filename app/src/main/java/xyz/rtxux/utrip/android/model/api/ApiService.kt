@@ -1,6 +1,8 @@
 package xyz.rtxux.utrip.android.model.api
 
+import okhttp3.ResponseBody
 import retrofit2.http.*
+import xyz.rtxux.utrip.android.base.Dummy
 import xyz.rtxux.utrip.android.model.bean.ApiResponse
 import xyz.rtxux.utrip.android.model.bean.LoginVO
 import xyz.rtxux.utrip.android.model.bean.RegisterDTO
@@ -12,8 +14,8 @@ import xyz.rtxux.utrip.server.model.vo.UserProfileVO
 
 interface ApiService {
     companion object {
-        const val API_BASE = "http://api.utrip.rtxux.xyz:4399"
-
+        //const val API_BASE = "http://api.utrip.rtxux.xyz:4399"
+        const val API_BASE = "http://api.utrip.rtxux.xyz:4400"
     }
 
     @GET("/auth/validate")
@@ -22,6 +24,9 @@ interface ApiService {
     @POST("/login")
     @FormUrlEncoded
     suspend fun login(@Field("username") username: String, @Field("password") password: String): ApiResponse<LoginVO>
+
+    @POST("/logout")
+    suspend fun logout(): ResponseBody
 
     @POST("/auth/register")
     suspend fun register(@Body registerDTO: RegisterDTO): ApiResponse<RegisterVO>
@@ -44,4 +49,7 @@ interface ApiService {
 
     @GET("/user/{id}/profile")
     suspend fun getUserProfileVO(@Path("id") userId: Int): ApiResponse<UserProfileVO>
+
+    @DELETE("/point/{id}")
+    suspend fun deletePoint(@Path("id") pointId: Int): ApiResponse<Dummy>
 }

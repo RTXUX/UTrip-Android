@@ -4,11 +4,10 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.ImageView
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.request.RequestOptions
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.geometry.LatLng
@@ -28,6 +27,7 @@ import xyz.rtxux.utrip.android.base.BaseVMFragment
 import xyz.rtxux.utrip.android.base.GlideApp
 import xyz.rtxux.utrip.android.databinding.PointInfoFragmentBinding
 import xyz.rtxux.utrip.android.model.api.ApiService
+import xyz.rtxux.utrip.android.model.api.RetrofitClient
 import xyz.rtxux.utrip.android.utils.toast
 import java.text.SimpleDateFormat
 import java.util.*
@@ -43,7 +43,7 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
     private lateinit var mapboxMap: MapboxMap
     override fun getLayoutResId(): Int = R.layout.point_info_fragment
     private val pointId: Int by lazy { arguments!!["pointId"] as Int }
-
+    private lateinit var menu: Menu
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -52,9 +52,23 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
         mBinding.viewModel = mViewModel
         mBinding.infoMap.mParentView = mBinding.layoutScroll
         mBinding.infoMap.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
         initView()
         initData()
+        mViewModel.deleted.observe(this, Observer {
+            if (it == true) {
+                toast("删除成功")
+                findNavController().navigateUp()
+            }
+
+        })
         return res
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.point_info_menu, menu)
+        this.menu = menu
     }
 
     fun initView() {
@@ -86,6 +100,19 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
         })
         mViewModel.userProfile.observe(this, Observer {
             GlideApp.with(context!!).load(it.avatarUrl).into(mBinding.ivAvatar)
+        })
+        mViewModel.point.observe(this, Observer {
+            if (it.userId == RetrofitClient.userId) {
+                val deleteButton = menu.findItem(R.id.menu_btn_delete)
+                deleteButton.isVisible = true
+                deleteButton.setOnMenuItemClickListener {
+                    mViewModel.deletePoint()
+                    true
+                }
+            } else {
+                val deleteButton = menu.findItem(R.id.menu_btn_delete)
+                deleteButton.isVisible = false
+            }
         })
     }
 

@@ -20,6 +20,12 @@ object RetrofitClient {
         )
     }
 
+    fun clearCookie() {
+        cookieJar.clear()
+    }
+
+    var userId: Int = 0
+
     val service by lazy {
         Retrofit.Builder()
             .client(client)

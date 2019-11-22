@@ -26,4 +26,12 @@ class AuthRepository : BaseRepository() {
             "注册失败"
         )
     }
+
+    suspend fun logout(): UResult<Any> {
+        return safeApiCall({
+            RetrofitClient.service.logout()
+            RetrofitClient.clearCookie()
+            UResult.Success(0)
+        }, "登出失败")
+    }
 }

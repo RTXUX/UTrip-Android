@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import xyz.rtxux.utrip.android.R
 import xyz.rtxux.utrip.android.base.BaseActivity
 import xyz.rtxux.utrip.android.model.UResult
+import xyz.rtxux.utrip.android.model.api.RetrofitClient
 import xyz.rtxux.utrip.android.model.repository.AuthRepository
 import xyz.rtxux.utrip.android.ui.auth.AuthActivity
 
@@ -35,7 +36,10 @@ class MainActivity : BaseActivity() {
         launch {
             val validationResult = authRepository.validate()
             when (validationResult) {
-                is UResult.Success -> return@launch
+                is UResult.Success -> {
+                    RetrofitClient.userId = validationResult.data.userId
+                    return@launch
+                }
                 is UResult.Error -> {
                     Toast.makeText(
                         applicationContext,

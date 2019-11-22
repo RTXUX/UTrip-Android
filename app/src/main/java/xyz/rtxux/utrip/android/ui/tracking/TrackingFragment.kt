@@ -7,13 +7,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
 import com.mapbox.android.core.location.*
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
-import com.mapbox.mapboxsdk.camera.CameraPosition
-import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.location.LocationComponent
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.modes.CameraMode
@@ -27,6 +26,7 @@ import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import xyz.rtxux.utrip.android.R
 import xyz.rtxux.utrip.android.base.BaseVMFragment
 import xyz.rtxux.utrip.android.databinding.TrackingFragmentBinding
+import xyz.rtxux.utrip.android.model.realm.MyPoint
 
 class TrackingFragment : BaseVMFragment<TrackingViewModel, TrackingFragmentBinding>(
     true,
@@ -34,7 +34,6 @@ class TrackingFragment : BaseVMFragment<TrackingViewModel, TrackingFragmentBindi
 ) {
     override fun getLayoutResId(): Int = R.layout.tracking_fragment
 
-    private lateinit var viewModel: TrackingViewModel
     private lateinit var mapboxMap: MapboxMap
     private lateinit var locationEngine: LocationEngine
     private lateinit var locationComponent: LocationComponent
@@ -46,18 +45,8 @@ class TrackingFragment : BaseVMFragment<TrackingViewModel, TrackingFragmentBindi
         override fun onSuccess(result: LocationEngineResult?) {
             result!!
             locationComponent.forceLocationUpdate(result.lastLocation)
-            mViewModel.points.value?.add(
-                MyPoint(
-                    LatLng(result.lastLocation!!.latitude, result.lastLocation!!.longitude),
-                    System.currentTimeMillis()
-                )
-            )
-            mViewModel.points.postValue(mViewModel.points.value)
-            mapboxMap.animateCamera {
-                CameraPosition.Builder()
-                    .target(LatLng(result.lastLocation!!.latitude, result.lastLocation!!.longitude))
-                    .build()
-            }
+            mViewModel.postPoint(result)
+
         }
 
     }
@@ -68,9 +57,13 @@ class TrackingFragment : BaseVMFragment<TrackingViewModel, TrackingFragmentBindi
     ): View {
         val ret = super.onCreateView(inflater, container, savedInstanceState)
         mBinding.viewModel = mViewModel
-        mViewModel.points.value = mutableListOf()
+        mViewModel.myTrack = mViewModel.createTrack()
         initMap(savedInstanceState)
-
+        mBinding.stopTrackingButton.setOnClickListener {
+            mapboxMap.locationComponent.isLocationComponentEnabled = false
+            locationEngine.removeLocationUpdates(callback)
+            findNavController().navigateUp()
+        }
         return ret
     }
 
@@ -92,7 +85,12 @@ class TrackingFragment : BaseVMFragment<TrackingViewModel, TrackingFragmentBindi
                 locationComponent.cameraMode = CameraMode.TRACKING
                 locationComponent.renderMode = RenderMode.COMPASS
                 initLocationEngine()
-                it.addSource(GeoJsonSource("line-source", generateFeatureCollection()))
+                it.addSource(
+                    GeoJsonSource(
+                        "line-source",
+                        generateFeatureCollection(mViewModel.myTrack.value!!.points)
+                    )
+                )
                 it.addLayer(
                     LineLayer("line-layer", "line-source").withProperties(
                         PropertyFactory.lineDasharray(arrayOf<Float>(0.01f, .2f)),
@@ -102,17 +100,19 @@ class TrackingFragment : BaseVMFragment<TrackingViewModel, TrackingFragmentBindi
                         PropertyFactory.lineColor(Color.parseColor("#e55e5e"))
                     )
                 )
-                mViewModel.points.observe(this, Observer { points ->
-                    it.getSourceAs<GeoJsonSource>("line-source")
-                        ?.setGeoJson(generateFeatureCollection())
+                mViewModel.myTrack.observe(this, Observer { track ->
+                    mapboxMap.getStyle {
+                        it.getSourceAs<GeoJsonSource>("line-source")
+                            ?.setGeoJson(generateFeatureCollection(track.points))
+                    }
                 })
             }
         }
     }
 
-    fun generateFeatureCollection(): FeatureCollection {
-        return FeatureCollection.fromFeature(Feature.fromGeometry(LineString.fromLngLats(mViewModel.points.value!!.map {
-            Point.fromLngLat(it.latLng.longitude, it.latLng.latitude)
+    fun generateFeatureCollection(points: List<MyPoint>): FeatureCollection {
+        return FeatureCollection.fromFeature(Feature.fromGeometry(LineString.fromLngLats(points.map {
+            Point.fromLngLat(it.longitude, it.latitude)
         })))
     }
 

@@ -14,6 +14,7 @@ class PointInfoViewModel : ViewModel() {
     private val pointRepository by lazy { PointRepository() }
     val point: MutableLiveData<PointVO> = MutableLiveData()
     val userProfile: MutableLiveData<UserProfileVO> = MutableLiveData()
+    val deleted: MutableLiveData<Boolean> = MutableLiveData(false)
     private val userProfileRepository by lazy { UserProfileRepository() }
     fun getPointVO(pointId: Int) {
         viewModelScope.launch {
@@ -40,6 +41,19 @@ class PointInfoViewModel : ViewModel() {
                     }
                     is UResult.Error -> {
 
+                    }
+                }
+            }
+        }
+    }
+
+    fun deletePoint() {
+        if (point.value == null) return
+        viewModelScope.launch {
+            val result = pointRepository.deletePoint(point.value!!.pointId).also {
+                when (it) {
+                    is UResult.Success -> {
+                        deleted.postValue(true)
                     }
                 }
             }
