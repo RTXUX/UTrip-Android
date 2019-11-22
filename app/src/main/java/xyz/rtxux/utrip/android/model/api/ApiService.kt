@@ -55,4 +55,8 @@ interface ApiService {
 
     @GET("/point")
     suspend fun findPointByUser(@Query("userId") userId: Int): ApiResponse<List<PointVO>>
+
+    @POST("/user/{id}/avatar")
+    @FormUrlEncoded
+    suspend fun setAvatar(@Field("avatarId") avatarId: Int, @Path("id") userId: Int): ApiResponse<UserProfileVO>
 }

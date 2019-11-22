@@ -13,4 +13,11 @@ class UserProfileRepository : BaseRepository() {
             "获取用户信息失败"
         )
     }
+
+    suspend fun setAvatar(userId: Int, avatarId: Int): UResult<UserProfileVO> {
+        return safeApiCall(
+            { executeResponse(RetrofitClient.service.setAvatar(avatarId, RetrofitClient.userId)) },
+            "设置头像失败"
+        )
+    }
 }
