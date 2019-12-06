@@ -13,11 +13,10 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
-import kotlinx.android.synthetic.main.fragment_profile.view.*
 import kotlinx.android.synthetic.main.layout_dialog_imgtype.view.*
 import kotlinx.coroutines.launch
 import xyz.rtxux.utrip.android.R
-import xyz.rtxux.utrip.android.base.BaseVMFragment
+import xyz.rtxux.utrip.android.base.BaseVMFragment2
 import xyz.rtxux.utrip.android.base.GlideApp
 import xyz.rtxux.utrip.android.databinding.FragmentProfileBinding
 import xyz.rtxux.utrip.android.model.repository.AuthRepository
@@ -25,7 +24,7 @@ import xyz.rtxux.utrip.android.ui.auth.AuthActivity
 import xyz.rtxux.utrip.android.ui.zoomview.ImageZoomActivity
 
 class ProfileFragment :
-    BaseVMFragment<ProfileViewModel, FragmentProfileBinding>(true, ProfileViewModel::class.java) {
+    BaseVMFragment2<ProfileViewModel, FragmentProfileBinding>(ProfileViewModel::class.java) {
     override fun getLayoutResId(): Int = R.layout.fragment_profile
     private val authRepository by lazy { AuthRepository() }
 
@@ -35,33 +34,13 @@ class ProfileFragment :
         savedInstanceState: Bundle?
     ): View {
         val ret = super.onCreateView(inflater, container, savedInstanceState)
-        mBinding.viewModel = mViewModel
-        mViewModel.loadAvatar()
-        mBinding.buttonLogout.setOnClickListener {
-            launch { authRepository.logout() }
-            startActivity(Intent(context, AuthActivity::class.java))
-            activity?.finish()
-        }
-        mViewModel.avatarUrl.observe(this, Observer {
-            GlideApp.with(context!!).load(it).into(mBinding.ivAvatar)
-            mBinding.ivAvatar.setOnClickListener { view ->
-                startActivity(Intent(context, ImageZoomActivity::class.java).apply {
-                    putExtra("url", it)
-                })
-            }
-        })
-        mBinding.tvUsername.setOnClickListener {
-            findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToProfileEditFragment())
-        }
-        mBinding.layoutMyPoints.setOnClickListener {
-            findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToMyPointFragment())
-        }
-        initAvatarDialog()
+
+
         return ret
     }
 
     fun initAvatarDialog() {
-        mBinding.ivAvatar.setOnLongClickListener {
+        mBinding!!.ivAvatar.setOnLongClickListener {
             val dialog = Dialog(context!!)
             val dialogView = layoutInflater.inflate(R.layout.layout_dialog_imgtype, null)
             dialog.setContentView(dialogView)
@@ -136,5 +115,34 @@ class ProfileFragment :
                 }
             }
         }
+    }
+
+    override fun initView(savedInstanceState: Bundle?) {
+        val binding = mBinding!!
+        binding.buttonLogout.setOnClickListener {
+            launch { authRepository.logout() }
+            startActivity(Intent(context, AuthActivity::class.java))
+            activity?.finish()
+        }
+        mViewModel.avatarUrl.observe(this, Observer {
+            GlideApp.with(context!!).load(it).into(binding.ivAvatar)
+            binding.ivAvatar.setOnClickListener { view ->
+                startActivity(Intent(context, ImageZoomActivity::class.java).apply {
+                    putExtra("url", it)
+                })
+            }
+        })
+        binding.tvUsername.setOnClickListener {
+            findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToProfileEditFragment())
+        }
+        binding.layoutMyPoints.setOnClickListener {
+            findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToMyPointFragment())
+        }
+        initAvatarDialog()
+    }
+
+    override fun initData() {
+        mBinding?.viewModel = mViewModel
+        mViewModel.loadAvatar()
     }
 }

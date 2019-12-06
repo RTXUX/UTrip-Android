@@ -23,7 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.rtxux.utrip.android.R
-import xyz.rtxux.utrip.android.base.BaseVMFragment
+import xyz.rtxux.utrip.android.base.BaseVMFragment2
 import xyz.rtxux.utrip.android.databinding.PublishPointFragmentBinding
 import xyz.rtxux.utrip.android.model.UResult
 import xyz.rtxux.utrip.android.model.repository.ImageRepository
@@ -33,8 +33,7 @@ import xyz.rtxux.utrip.android.utils.toast
 import xyz.rtxux.utrip.server.model.dto.LocationBean
 import xyz.rtxux.utrip.server.model.dto.PointDTO
 
-class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointFragmentBinding>(
-    true,
+class PublishPointFragment : BaseVMFragment2<PublishPointViewModel, PublishPointFragmentBinding>(
     PublishPointViewModel::class.java
 ) {
     private val imageRepository by lazy { ImageRepository() }
@@ -42,21 +41,12 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
     override fun getLayoutResId(): Int = R.layout.publish_point_fragment
     private val imageList = mutableListOf<Bitmap>()
     private lateinit var mapboxMap: MapboxMap
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val ret = super.onCreateView(inflater, container, savedInstanceState)
-        setHasOptionsMenu(true)
-        mBinding.viewModel = mViewModel
-        initMap(savedInstanceState)
-        initView()
-        return ret
-    }
+
 
     fun initMap(savedInstanceState: Bundle?) {
-        mBinding.pickMap.onCreate(savedInstanceState)
-        mBinding.pickMap.getMapAsync {
+        val binding = mBinding!!
+        binding.pickMap.onCreate(savedInstanceState)
+        binding.pickMap.getMapAsync {
             it.uiSettings.isAttributionEnabled = false
             it.uiSettings.isLogoEnabled = false
             mapboxMap = it
@@ -75,11 +65,14 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
         }
     }
 
-    fun initView() {
-        mBinding.layoutAddimg2.setOnClickListener {
-            mBinding.layoutAddimg.performClick()
+    override fun initView(savedInstanceState: Bundle?) {
+        setHasOptionsMenu(true)
+        initMap(savedInstanceState)
+        val binding = mBinding!!
+        binding.layoutAddimg2.setOnClickListener {
+            binding.layoutAddimg.performClick()
         }
-        mBinding.layoutAddimg.setOnClickListener {
+        binding.layoutAddimg.setOnClickListener {
             val dialog = Dialog(context!!)
             val dialogView = layoutInflater.inflate(R.layout.layout_dialog_imgtype, null)
             dialog.setContentView(dialogView)
@@ -101,20 +94,21 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
     }
 
     fun addImg(bitmap: Bitmap) {
+        val binding = mBinding!!
         imageList.add(bitmap)
         val refreshSv = {
             if (imageList.size >= 5) {
-                mBinding.layoutAddimg2.visibility = View.GONE
+                binding.layoutAddimg2.visibility = View.GONE
             }
             if (imageList.size < 5) {
-                mBinding.layoutAddimg2.visibility = View.VISIBLE
+                binding.layoutAddimg2.visibility = View.VISIBLE
             }
             if (imageList.isEmpty()) {
-                mBinding.svImg.visibility = View.GONE
-                mBinding.layoutAddimg.visibility = View.VISIBLE
+                binding.svImg.visibility = View.GONE
+                binding.layoutAddimg.visibility = View.VISIBLE
             } else {
-                mBinding.svImg.visibility = View.VISIBLE
-                mBinding.layoutAddimg.visibility = View.GONE
+                binding.svImg.visibility = View.VISIBLE
+                binding.layoutAddimg.visibility = View.GONE
             }
         }
         val imageView = ImageView(context!!).apply {
@@ -125,13 +119,13 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
             )
             scaleType = ImageView.ScaleType.FIT_CENTER
             setOnLongClickListener {
-                mBinding.layoutImg.removeView(this)
+                binding.layoutImg.removeView(this)
                 imageList.remove(bitmap)
                 refreshSv()
                 true
             }
         }
-        mBinding.layoutImg.addView(
+        binding.layoutImg.addView(
             imageView,
             LinearLayout.LayoutParams(
                 CommonUtils.dp2px(63f),
@@ -198,40 +192,40 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        mBinding.pickMap.onStart()
-    }
-
-    override fun onStop() {
-        mBinding.pickMap.onStop()
-        super.onStop()
-    }
-
-    override fun onDestroyView() {
-        mBinding.pickMap.onDestroy()
-        super.onDestroyView()
-    }
-
-    override fun onPause() {
-        mBinding.pickMap.onPause()
-        super.onPause()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mBinding.pickMap.onResume()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        mBinding.pickMap.onSaveInstanceState(outState)
-        super.onSaveInstanceState(outState)
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        mBinding.pickMap.onLowMemory()
-    }
+//    override fun onStart() {
+//        super.onStart()
+//        mBinding.pickMap.onStart()
+//    }
+//
+//    override fun onStop() {
+//        mBinding.pickMap.onStop()
+//        super.onStop()
+//    }
+//
+//    override fun onDestroyView() {
+//        mBinding.pickMap.onDestroy()
+//        super.onDestroyView()
+//    }
+//
+//    override fun onPause() {
+//        mBinding.pickMap.onPause()
+//        super.onPause()
+//    }
+//
+//    override fun onResume() {
+//        super.onResume()
+//        mBinding.pickMap.onResume()
+//    }
+//
+//    override fun onSaveInstanceState(outState: Bundle) {
+//        mBinding.pickMap.onSaveInstanceState(outState)
+//        super.onSaveInstanceState(outState)
+//    }
+//
+//    override fun onLowMemory() {
+//        super.onLowMemory()
+//        mBinding.pickMap.onLowMemory()
+//    }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
@@ -239,6 +233,7 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val binding = mBinding!!
         when (item.itemId) {
             R.id.buttonConfirmPublish -> {
                 mViewModel.viewModelScope.launch {
@@ -255,8 +250,8 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
                     }
                     val target = mapboxMap.cameraPosition.target
                     val pointDTO = PointDTO(
-                        name = mBinding.name!!,
-                        description = mBinding.content!!,
+                        name = binding.name!!,
+                        description = binding.content!!,
                         images = imageIds,
                         associatedTrack = null,
                         location = LocationBean("WGS-84", target.latitude, target.longitude)
@@ -277,6 +272,11 @@ class PublishPointFragment : BaseVMFragment<PublishPointViewModel, PublishPointF
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+
+    override fun initData() {
+        mBinding!!.viewModel = mViewModel
     }
 
 //    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

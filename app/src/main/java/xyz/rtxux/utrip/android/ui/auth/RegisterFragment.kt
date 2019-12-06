@@ -1,9 +1,6 @@
 package xyz.rtxux.utrip.android.ui.auth
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
@@ -11,28 +8,25 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.rtxux.utrip.android.R
-import xyz.rtxux.utrip.android.base.BaseVMFragment
+import xyz.rtxux.utrip.android.base.BaseVMFragment2
 import xyz.rtxux.utrip.android.databinding.RegisterFragmentBinding
 import xyz.rtxux.utrip.android.model.UResult
 import xyz.rtxux.utrip.android.model.bean.RegisterDTO
 import xyz.rtxux.utrip.android.model.repository.AuthRepository
 
-class RegisterFragment : BaseVMFragment<RegisterViewModel, RegisterFragmentBinding>(
-    true,
+class RegisterFragment : BaseVMFragment2<RegisterViewModel, RegisterFragmentBinding>(
     RegisterViewModel::class.java
 ) {
     override fun getLayoutResId(): Int = R.layout.register_fragment
 
     private val authRepository by lazy { AuthRepository() }
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val ret = super.onCreateView(inflater, container, savedInstanceState)
-        mBinding.button2.setOnClickListener {
+
+    override fun initView(savedInstanceState: Bundle?) {
+        val binding = mBinding!!
+        binding.button2.setOnClickListener {
             mViewModel.viewModelScope.launch {
                 val response =
-                    authRepository.register(RegisterDTO(mBinding.username!!, mBinding.password!!))
+                    authRepository.register(RegisterDTO(binding.username!!, binding.password!!))
                 withContext(Dispatchers.Main) {
                     when (response) {
                         is UResult.Success -> {
@@ -47,7 +41,10 @@ class RegisterFragment : BaseVMFragment<RegisterViewModel, RegisterFragmentBindi
                 }
             }
         }
-        return ret
+    }
+
+    override fun initData() {
+        
     }
 
 

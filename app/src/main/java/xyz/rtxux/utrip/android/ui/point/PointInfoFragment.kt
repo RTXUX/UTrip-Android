@@ -5,7 +5,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.*
+import android.view.Menu
+import android.view.MenuInflater
 import android.widget.ImageView
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
@@ -25,8 +26,9 @@ import com.tbruyelle.rxpermissions2.RxPermissions
 import com.youth.banner.BannerConfig
 import com.youth.banner.loader.ImageLoader
 import xyz.rtxux.utrip.android.R
-import xyz.rtxux.utrip.android.base.BaseVMFragment
+import xyz.rtxux.utrip.android.base.BaseVMFragment2
 import xyz.rtxux.utrip.android.base.GlideApp
+import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
 import xyz.rtxux.utrip.android.databinding.PointInfoFragmentBinding
 import xyz.rtxux.utrip.android.model.api.ApiService
 import xyz.rtxux.utrip.android.model.api.RetrofitClient
@@ -35,8 +37,7 @@ import xyz.rtxux.utrip.android.utils.toast
 import java.text.SimpleDateFormat
 import java.util.*
 
-class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBinding>(
-    true,
+class PointInfoFragment : BaseVMFragment2<PointInfoViewModel, PointInfoFragmentBinding>(
     PointInfoViewModel::class.java
 ) {
     companion object {
@@ -47,26 +48,6 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
     override fun getLayoutResId(): Int = R.layout.point_info_fragment
     private val args by navArgs<PointInfoFragmentArgs>()
     private lateinit var menu: Menu
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val res = super.onCreateView(inflater, container, savedInstanceState)
-        mBinding.viewModel = mViewModel
-        mBinding.infoMap.mParentView = mBinding.layoutScroll
-        mBinding.infoMap.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-        initView()
-        initData()
-        mViewModel.deleted.observe(this, Observer {
-            if (it == true) {
-                toast("删除成功")
-                findNavController().navigateUp()
-            }
-
-        })
-        return res
-    }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
@@ -74,9 +55,14 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
         this.menu = menu
     }
 
-    fun initView() {
-
-        mBinding.infoMap.getMapAsync {
+    override fun initView(savedInstanceState: Bundle?) {
+        val binding = mBinding!!
+        lifecycle.addObserver(MapViewLifeCycleBean(binding.infoMap))
+        binding.viewModel = mViewModel
+        binding.infoMap.mParentView = binding.layoutScroll
+        binding.infoMap.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+        binding.infoMap.getMapAsync {
             mapboxMap = it
             it.setStyle(
                 Style.Builder().fromUri(Style.MAPBOX_STREETS).withImage(
@@ -86,32 +72,33 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
             it.uiSettings.isLogoEnabled = false
             it.uiSettings.isAttributionEnabled = false
         }
-        mBinding.banner.setImageLoader(object : ImageLoader() {
+        binding.banner.setImageLoader(object : ImageLoader() {
             override fun displayImage(context: Context?, path: Any?, imageView: ImageView?) {
                 GlideApp.with(context!!).load(path)
                     .apply(RequestOptions().placeholder(R.drawable.loading)).into(imageView!!)
             }
         })
-        mBinding.banner.setBannerStyle(BannerConfig.CIRCLE_INDICATOR)
+        binding.banner.setBannerStyle(BannerConfig.CIRCLE_INDICATOR)
         mViewModel.point.observe(this, Observer {
-            mBinding.tvTime.text =
+            binding.tvTime.text =
                 SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(Date(it.timestamp)).toString()
             val imageUrls = it.images.map {
                 "${ApiService.API_BASE}/image/${it}"
             }
-            mBinding.banner.setImages(imageUrls)
-            mBinding.banner.setOnBannerListener { position ->
+            binding.banner.setImages(imageUrls)
+            binding.banner.setOnBannerListener { position ->
                 startActivity(Intent(context, ImageZoomActivity::class.java).apply {
                     putExtra("url", imageUrls[position])
                 })
             }
-            mBinding.banner.start()
+            binding.banner.start()
         })
 //        mViewModel.userProfile.observe(this, Observer {
-//            GlideApp.with(context!!).load(it.avatarUrl).into(mBinding.ivAvatar)
+//            GlideApp.with(context!!).load(it.avatarUrl).into(binding.ivAvatar)
 //        })
         mViewModel.point.observe(this, Observer {
-            GlideApp.with(context!!).load("${ApiService.API_BASE}/user/${it.userId}/avatar").into(mBinding.ivAvatar)
+            GlideApp.with(context!!).load("${ApiService.API_BASE}/user/${it.userId}/avatar")
+                .into(binding.ivAvatar)
         })
         mViewModel.point.observe(this, Observer {
             if (it.userId == RetrofitClient.userId) {
@@ -126,9 +113,18 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
                 deleteButton.isVisible = false
             }
         })
+        mViewModel.deleted.observe(this, Observer {
+            if (it == true) {
+                toast("删除成功")
+                findNavController().navigateUp()
+            }
+
+        })
     }
 
-    fun initData() {
+    override fun initData() {
+        val binding = mBinding!!
+        binding.viewModel = mViewModel
         mViewModel.getPointVO(args.pointId)
     }
 
@@ -139,7 +135,7 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
                 toast("需要定位权限")
                 activity?.finish()
             }
-            val symbolManager = SymbolManager(mBinding.infoMap, mapboxMap, style)
+            val symbolManager = SymbolManager(mBinding!!.infoMap, mapboxMap, style)
             mViewModel.point.observe(this, Observer {
                 val latLng = LatLng(it.location.latitude, it.location.longitude)
                 symbolManager.create(
@@ -166,39 +162,9 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        mBinding.infoMap.onStart()
-    }
-
-    override fun onStop() {
-        mBinding.infoMap.onStop()
-        super.onStop()
-    }
-
-    override fun onDestroyView() {
-        mBinding.infoMap.onDestroy()
-        super.onDestroyView()
-    }
-
-    override fun onPause() {
-        mBinding.infoMap.onPause()
-        super.onPause()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mBinding.infoMap.onResume()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        mBinding.infoMap.onSaveInstanceState(outState)
-        super.onSaveInstanceState(outState)
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        mBinding.infoMap.onLowMemory()
+    override fun onDestroy() {
+        mBinding?.infoMap?.onDestroy()
+        super.onDestroy()
     }
 
 }
