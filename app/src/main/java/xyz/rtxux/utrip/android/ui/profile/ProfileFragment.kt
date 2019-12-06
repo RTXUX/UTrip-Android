@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
+import kotlinx.android.synthetic.main.fragment_profile.view.*
 import kotlinx.android.synthetic.main.layout_dialog_imgtype.view.*
 import kotlinx.coroutines.launch
 import xyz.rtxux.utrip.android.R
@@ -21,6 +22,7 @@ import xyz.rtxux.utrip.android.base.GlideApp
 import xyz.rtxux.utrip.android.databinding.FragmentProfileBinding
 import xyz.rtxux.utrip.android.model.repository.AuthRepository
 import xyz.rtxux.utrip.android.ui.auth.AuthActivity
+import xyz.rtxux.utrip.android.ui.zoomview.ImageZoomActivity
 
 class ProfileFragment :
     BaseVMFragment<ProfileViewModel, FragmentProfileBinding>(true, ProfileViewModel::class.java) {
@@ -34,15 +36,23 @@ class ProfileFragment :
     ): View {
         val ret = super.onCreateView(inflater, container, savedInstanceState)
         mBinding.viewModel = mViewModel
-        mViewModel.loadUserProfileVO()
+        mViewModel.loadAvatar()
         mBinding.buttonLogout.setOnClickListener {
             launch { authRepository.logout() }
             startActivity(Intent(context, AuthActivity::class.java))
             activity?.finish()
         }
-        mViewModel.userProfileVO.observe(this, Observer {
-            GlideApp.with(context!!).load(it.avatarUrl).into(mBinding.ivAvatar)
+        mViewModel.avatarUrl.observe(this, Observer {
+            GlideApp.with(context!!).load(it).into(mBinding.ivAvatar)
+            mBinding.ivAvatar.setOnClickListener { view ->
+                startActivity(Intent(context, ImageZoomActivity::class.java).apply {
+                    putExtra("url", it)
+                })
+            }
         })
+        mBinding.tvUsername.setOnClickListener {
+            findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToProfileEditFragment())
+        }
         mBinding.layoutMyPoints.setOnClickListener {
             findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToMyPointFragment())
         }
@@ -51,7 +61,7 @@ class ProfileFragment :
     }
 
     fun initAvatarDialog() {
-        mBinding.ivAvatar.setOnClickListener {
+        mBinding.ivAvatar.setOnLongClickListener {
             val dialog = Dialog(context!!)
             val dialogView = layoutInflater.inflate(R.layout.layout_dialog_imgtype, null)
             dialog.setContentView(dialogView)
@@ -68,6 +78,7 @@ class ProfileFragment :
             lp.width = LinearLayout.LayoutParams.MATCH_PARENT
             dialogWindow.attributes = lp
             dialog.show()
+            true
         }
     }
 

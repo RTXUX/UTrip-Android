@@ -43,7 +43,7 @@ class ExploreFragment : Fragment() {
     private lateinit var mapboxMap: MapboxMap
     private lateinit var exploreViewModel: ExploreViewModel
     private lateinit var locationComponent: LocationComponent
-    private lateinit var symbolManager: SymbolManager
+    private var symbolManager: SymbolManager? = null
     private var idle = true
     private var points: List<PointVO> = listOf()
     private val pointRepository by lazy { PointRepository() }
@@ -94,7 +94,7 @@ class ExploreFragment : Fragment() {
                 activity?.finish()
             }
             symbolManager = SymbolManager(mainMap, mapboxMap, style)
-            symbolManager.addClickListener {
+            symbolManager!!.addClickListener {
                 val pointVO = symbolToPointVO[it]!!
                 findNavController().navigate(
                     ExploreFragmentDirections.actionNavigationExploreToPointInfoFragment(
@@ -151,7 +151,7 @@ class ExploreFragment : Fragment() {
             markerLock.writeLock().lock()
             for (point in points) {
                 if (!(point in pointVOToSymbol)) {
-                    symbolManager.create(
+                    symbolManager!!.create(
                         SymbolOptions().withIconImage(ID_ICON_LOC).withIconAnchor(ICON_ANCHOR_BOTTOM).withLatLng(
                             LatLng(point.location.latitude, point.location.longitude)
                         )
@@ -167,7 +167,7 @@ class ExploreFragment : Fragment() {
                 forEach {
                     val pointVO = it.value
                     if (!(pointVO in points)) {
-                        symbolManager.delete(it.key)
+                        symbolManager!!.delete(it.key)
                         remove()
                         pointVOToSymbol.remove(pointVO)
                     }
@@ -189,7 +189,7 @@ class ExploreFragment : Fragment() {
 
     override fun onPause() {
         //mainMap.onPause()
-        symbolManager.deleteAll()
+        symbolManager?.deleteAll()
         symbolToPointVO.clear()
         pointVOToSymbol.clear()
         super.onPause()

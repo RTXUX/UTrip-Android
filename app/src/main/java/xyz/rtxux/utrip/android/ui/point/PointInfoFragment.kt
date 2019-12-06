@@ -9,6 +9,7 @@ import android.view.*
 import android.widget.ImageView
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.request.RequestOptions
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.geometry.LatLng
@@ -44,7 +45,7 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
 
     private lateinit var mapboxMap: MapboxMap
     override fun getLayoutResId(): Int = R.layout.point_info_fragment
-    private val pointId: Int by lazy { arguments!!["pointId"] as Int }
+    private val args by navArgs<PointInfoFragmentArgs>()
     private lateinit var menu: Menu
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -106,8 +107,11 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
             }
             mBinding.banner.start()
         })
-        mViewModel.userProfile.observe(this, Observer {
-            GlideApp.with(context!!).load(it.avatarUrl).into(mBinding.ivAvatar)
+//        mViewModel.userProfile.observe(this, Observer {
+//            GlideApp.with(context!!).load(it.avatarUrl).into(mBinding.ivAvatar)
+//        })
+        mViewModel.point.observe(this, Observer {
+            GlideApp.with(context!!).load("${ApiService.API_BASE}/user/${it.userId}/avatar").into(mBinding.ivAvatar)
         })
         mViewModel.point.observe(this, Observer {
             if (it.userId == RetrofitClient.userId) {
@@ -125,7 +129,7 @@ class PointInfoFragment : BaseVMFragment<PointInfoViewModel, PointInfoFragmentBi
     }
 
     fun initData() {
-        mViewModel.getPointVO(pointId)
+        mViewModel.getPointVO(args.pointId)
     }
 
     @SuppressLint("CheckResult")

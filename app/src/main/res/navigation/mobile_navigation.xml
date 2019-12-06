@@ -26,6 +26,9 @@
         <action
             android:id="@+id/action_navigation_track_to_trackingFragment"
             app:destination="@id/trackingFragment" />
+        <action
+            android:id="@+id/action_navigation_track_to_trackDetailFragment"
+            app:destination="@id/trackDetailFragment" />
     </fragment>
 
     <fragment
@@ -36,6 +39,9 @@
         <action
             android:id="@+id/action_navigation_profile_to_myPointFragment"
             app:destination="@id/myPointFragment" />
+        <action
+            android:id="@+id/action_navigation_profile_to_profileEditFragment"
+            app:destination="@id/profileEditFragment" />
     </fragment>
     <fragment
         android:id="@+id/publishPointFragment"
@@ -61,4 +67,15 @@
             android:id="@+id/action_myPointFragment_to_pointInfoFragment"
             app:destination="@id/pointInfoFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/trackDetailFragment"
+        android:name="xyz.rtxux.utrip.android.ui.trackdetail.TrackDetailFragment" >
+        <argument
+            android:name="trackId"
+            app:argType="integer" />
+    </fragment>
+    <fragment
+        android:id="@+id/profileEditFragment"
+        android:name="xyz.rtxux.utrip.android.ui.profileedit.ProfileEditFragment"
+        android:label="用户信息" />
 </navigation>

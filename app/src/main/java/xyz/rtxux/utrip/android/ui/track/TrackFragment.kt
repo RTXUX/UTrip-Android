@@ -27,7 +27,7 @@ class TrackFragment :
             findNavController().navigate(TrackFragmentDirections.actionNavigationTrackToTrackingFragment())
         }
         mBinding.rvTrackList.layoutManager = LinearLayoutManager(context)
-        mBinding.rvTrackList.adapter = TrackListAdapter(mViewModel.trackList.value!!)
+        mBinding.rvTrackList.adapter = TrackListAdapter(mViewModel.trackList.value!!, findNavController())
 
         return ret
     }
