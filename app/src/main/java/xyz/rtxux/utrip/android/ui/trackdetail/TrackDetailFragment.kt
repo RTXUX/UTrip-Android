@@ -1,10 +1,9 @@
 package xyz.rtxux.utrip.android.ui.trackdetail
 
 import android.graphics.Color
-import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
-import android.view.*
-import androidx.fragment.app.Fragment
+import android.view.Menu
+import android.view.MenuInflater
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -21,35 +20,35 @@ import com.mapbox.mapboxsdk.style.layers.LineLayer
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
-
 import xyz.rtxux.utrip.android.R
-import xyz.rtxux.utrip.android.base.BaseVMFragment
+import xyz.rtxux.utrip.android.base.BaseCachingFragment
 import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
 import xyz.rtxux.utrip.android.databinding.TrackDetailFragmentBinding
 import xyz.rtxux.utrip.android.model.realm.MyPoint
 
-class TrackDetailFragment : BaseVMFragment<TrackDetailViewModel, TrackDetailFragmentBinding>(true, TrackDetailViewModel::class.java) {
+class TrackDetailFragment :
+    BaseCachingFragment<TrackDetailViewModel, TrackDetailFragmentBinding, TrackDetailFragment.ViewHolder>(
+        TrackDetailViewModel::class.java
+    ) {
+
+    class ViewHolder : BaseCachingFragment.ViewHolder<TrackDetailFragmentBinding>() {
+        lateinit var mapboxMap: MapboxMap
+        override fun clean() {
+
+        }
+
+    }
+    
+    
     override fun getLayoutResId(): Int = R.layout.track_detail_fragment
     private val args by navArgs<TrackDetailFragmentArgs>()
-    private lateinit var mapboxMap: MapboxMap
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val ret = super.onCreateView(inflater, container, savedInstanceState)
-        setHasOptionsMenu(true)
-        mBinding.viewModel = mViewModel
-        mViewModel.loadTrack(args.trackId)
-        initMap(savedInstanceState)
-        return ret
-    }
 
 
     fun initMap(savedInstanceState: Bundle?) {
-        mBinding.trackMap.onCreate(savedInstanceState)
-        lifecycle.addObserver(MapViewLifeCycleBean(mBinding.trackMap))
-        mBinding.trackMap.getMapAsync {
-            mapboxMap = it
+        viewHolder.mBinding.trackMap.onCreate(savedInstanceState)
+        viewHolder.lifecycle.addObserver(MapViewLifeCycleBean(viewHolder.mBinding.trackMap))
+        viewHolder.mBinding.trackMap.getMapAsync {
+            viewHolder.mapboxMap = it
             it.uiSettings.isAttributionEnabled = false
             it.uiSettings.isLogoEnabled = false
             it.setStyle(Style.MAPBOX_STREETS) {
@@ -64,7 +63,7 @@ class TrackDetailFragment : BaseVMFragment<TrackDetailViewModel, TrackDetailFrag
                     )
                 )
                 mViewModel.myTrack.observe(this, Observer { track ->
-                    mapboxMap.getStyle {
+                    viewHolder.mapboxMap.getStyle {
                         it.getSourceAs<GeoJsonSource>("line-source")
                             ?.setGeoJson(generateFeatureCollection(track.points))
                     }
@@ -93,12 +92,11 @@ class TrackDetailFragment : BaseVMFragment<TrackDetailViewModel, TrackDetailFrag
                 LatLng(it.latitude, it.longitude)
             }
         ).build()?.let {
-            mapboxMap.easeCamera(CameraUpdateFactory.newLatLngBounds(it, 50), 3000)
+            viewHolder.mapboxMap.easeCamera(CameraUpdateFactory.newLatLngBounds(it, 50), 3000)
         }
     }
 
     override fun onDestroyView() {
-        mBinding.trackMap.onDestroy()
         super.onDestroyView()
     }
 
@@ -106,5 +104,16 @@ class TrackDetailFragment : BaseVMFragment<TrackDetailViewModel, TrackDetailFrag
         return FeatureCollection.fromFeature(Feature.fromGeometry(LineString.fromLngLats(points.map {
             Point.fromLngLat(it.longitude, it.latitude)
         })))
+    }
+
+    override fun createViewHolder(): ViewHolder = ViewHolder()
+    override fun initData() {
+        viewHolder.mBinding.viewModel = mViewModel
+        mViewModel.loadTrack(args.trackId)
+    }
+
+    override fun initView(savedInstanceState: Bundle?) {
+        setHasOptionsMenu(true)
+        initMap(savedInstanceState)
     }
 }

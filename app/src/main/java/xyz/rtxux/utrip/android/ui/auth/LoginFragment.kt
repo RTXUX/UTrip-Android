@@ -9,24 +9,35 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.rtxux.utrip.android.R
-import xyz.rtxux.utrip.android.base.BaseVMFragment2
+import xyz.rtxux.utrip.android.base.BaseCachingFragment
 import xyz.rtxux.utrip.android.databinding.LoginFragmentBinding
 import xyz.rtxux.utrip.android.model.UResult
 import xyz.rtxux.utrip.android.model.repository.AuthRepository
 import xyz.rtxux.utrip.android.ui.main.MainActivity
 
 class LoginFragment :
-    BaseVMFragment2<LoginViewModel, LoginFragmentBinding>(LoginViewModel::class.java) {
+    BaseCachingFragment<LoginViewModel, LoginFragmentBinding, LoginFragment.ViewHolder>(
+        LoginViewModel::class.java
+    ) {
+
+    class ViewHolder : BaseCachingFragment.ViewHolder<LoginFragmentBinding>() {
+        override fun clean() {
+
+        }
+
+    }
 
     override fun getLayoutResId(): Int = R.layout.login_fragment
 
     private val authRepository by lazy { AuthRepository() }
 
     override fun initView(savedInstanceState: Bundle?) {
-        val binding = mBinding!!
-        binding.button.setOnClickListener {
+        viewHolder.mBinding.button.setOnClickListener {
             mViewModel.viewModelScope.launch {
-                val response = authRepository.login(binding.username!!, binding.password!!)
+                val response = authRepository.login(
+                    viewHolder.mBinding.username!!,
+                    viewHolder.mBinding.password!!
+                )
                 when (response) {
                     is UResult.Success -> {
                         withContext(Dispatchers.Main) {
@@ -43,14 +54,15 @@ class LoginFragment :
                 }
             }
         }
-        binding.registerButton.setOnClickListener {
+        viewHolder.mBinding.registerButton.setOnClickListener {
             findNavController().navigate(LoginFragmentDirections.actionLoginFragmentToRegisterFragment())
         }
     }
 
     override fun initData() {
-        val binding = mBinding!!
-        binding.viewModel = mViewModel
+        viewHolder.mBinding.viewModel = mViewModel
     }
+
+    override fun createViewHolder(): ViewHolder = ViewHolder()
 
 }

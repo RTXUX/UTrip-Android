@@ -8,21 +8,29 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.rtxux.utrip.android.R
-import xyz.rtxux.utrip.android.base.BaseVMFragment2
+import xyz.rtxux.utrip.android.base.BaseCachingFragment
 import xyz.rtxux.utrip.android.databinding.RegisterFragmentBinding
 import xyz.rtxux.utrip.android.model.UResult
 import xyz.rtxux.utrip.android.model.bean.RegisterDTO
 import xyz.rtxux.utrip.android.model.repository.AuthRepository
 
-class RegisterFragment : BaseVMFragment2<RegisterViewModel, RegisterFragmentBinding>(
+class RegisterFragment :
+    BaseCachingFragment<RegisterViewModel, RegisterFragmentBinding, RegisterFragment.ViewHolder>(
     RegisterViewModel::class.java
 ) {
+    class ViewHolder : BaseCachingFragment.ViewHolder<RegisterFragmentBinding>() {
+        override fun clean() {
+
+        }
+
+    }
+
     override fun getLayoutResId(): Int = R.layout.register_fragment
 
     private val authRepository by lazy { AuthRepository() }
 
     override fun initView(savedInstanceState: Bundle?) {
-        val binding = mBinding!!
+        val binding = viewHolder.mBinding
         binding.button2.setOnClickListener {
             mViewModel.viewModelScope.launch {
                 val response =
@@ -46,6 +54,8 @@ class RegisterFragment : BaseVMFragment2<RegisterViewModel, RegisterFragmentBind
     override fun initData() {
         
     }
+
+    override fun createViewHolder(): ViewHolder = ViewHolder()
 
 
 }

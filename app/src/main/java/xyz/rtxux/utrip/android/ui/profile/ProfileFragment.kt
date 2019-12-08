@@ -16,7 +16,7 @@ import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.layout_dialog_imgtype.view.*
 import kotlinx.coroutines.launch
 import xyz.rtxux.utrip.android.R
-import xyz.rtxux.utrip.android.base.BaseVMFragment2
+import xyz.rtxux.utrip.android.base.BaseCachingFragment
 import xyz.rtxux.utrip.android.base.GlideApp
 import xyz.rtxux.utrip.android.databinding.FragmentProfileBinding
 import xyz.rtxux.utrip.android.model.repository.AuthRepository
@@ -24,7 +24,17 @@ import xyz.rtxux.utrip.android.ui.auth.AuthActivity
 import xyz.rtxux.utrip.android.ui.zoomview.ImageZoomActivity
 
 class ProfileFragment :
-    BaseVMFragment2<ProfileViewModel, FragmentProfileBinding>(ProfileViewModel::class.java) {
+    BaseCachingFragment<ProfileViewModel, FragmentProfileBinding, ProfileFragment.ViewHolder>(
+        ProfileViewModel::class.java
+    ) {
+
+    class ViewHolder : BaseCachingFragment.ViewHolder<FragmentProfileBinding>() {
+        override fun clean() {
+
+        }
+
+    }
+
     override fun getLayoutResId(): Int = R.layout.fragment_profile
     private val authRepository by lazy { AuthRepository() }
 
@@ -40,7 +50,7 @@ class ProfileFragment :
     }
 
     fun initAvatarDialog() {
-        mBinding!!.ivAvatar.setOnLongClickListener {
+        viewHolder.mBinding.ivAvatar.setOnLongClickListener {
             val dialog = Dialog(context!!)
             val dialogView = layoutInflater.inflate(R.layout.layout_dialog_imgtype, null)
             dialog.setContentView(dialogView)
@@ -118,13 +128,13 @@ class ProfileFragment :
     }
 
     override fun initView(savedInstanceState: Bundle?) {
-        val binding = mBinding!!
+        val binding = viewHolder.mBinding
         binding.buttonLogout.setOnClickListener {
             launch { authRepository.logout() }
             startActivity(Intent(context, AuthActivity::class.java))
             activity?.finish()
         }
-        mViewModel.avatarUrl.observe(this, Observer {
+        mViewModel.avatarUrl.observe(viewHolder, Observer {
             GlideApp.with(context!!).load(it).into(binding.ivAvatar)
             binding.ivAvatar.setOnClickListener { view ->
                 startActivity(Intent(context, ImageZoomActivity::class.java).apply {
@@ -142,7 +152,9 @@ class ProfileFragment :
     }
 
     override fun initData() {
-        mBinding?.viewModel = mViewModel
+        viewHolder.mBinding.viewModel = mViewModel
         mViewModel.loadAvatar()
     }
+
+    override fun createViewHolder(): ViewHolder = ViewHolder()
 }

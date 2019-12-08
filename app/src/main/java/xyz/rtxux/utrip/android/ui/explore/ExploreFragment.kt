@@ -4,20 +4,13 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.location.LocationComponent
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.location.modes.RenderMode
-import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol
@@ -29,7 +22,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.rtxux.utrip.android.R
+import xyz.rtxux.utrip.android.base.BaseCachingFragment
 import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
+import xyz.rtxux.utrip.android.databinding.FragmentExploreBinding
 import xyz.rtxux.utrip.android.model.UResult
 import xyz.rtxux.utrip.android.model.repository.PointRepository
 import xyz.rtxux.utrip.android.utils.toast
@@ -37,50 +32,33 @@ import xyz.rtxux.utrip.server.model.vo.PointVO
 import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-class ExploreFragment : Fragment() {
+class ExploreFragment :
+    BaseCachingFragment<ExploreViewModel, FragmentExploreBinding, ExploreFragment.ViewHolder>(
+        ExploreViewModel::class.java
+    ) {
+
+    class ViewHolder : BaseCachingFragment.ViewHolder<FragmentExploreBinding>() {
+        lateinit var mapboxMap: MapboxMap
+        lateinit var locationComponent: LocationComponent
+        var symbolManager: SymbolManager? = null
+        var idle = true
+        var points: List<PointVO> = listOf()
+        val pointRepository by lazy { PointRepository() }
+        val symbolToPointVO = mutableMapOf<Symbol, PointVO>()
+        val pointVOToSymbol = mutableMapOf<PointVO, Symbol>()
+        val markerLock: ReadWriteLock = ReentrantReadWriteLock()
+        lateinit var mapViewLifecycleObserver: MapViewLifeCycleBean
+        override fun clean() {
+
+        }
+
+    }
     @SuppressLint("NotChinaMapView")
-    private lateinit var mainMap: MapView
-    private lateinit var mapboxMap: MapboxMap
-    private lateinit var exploreViewModel: ExploreViewModel
-    private lateinit var locationComponent: LocationComponent
-    private var symbolManager: SymbolManager? = null
-    private var idle = true
-    private var points: List<PointVO> = listOf()
-    private val pointRepository by lazy { PointRepository() }
-    private val symbolToPointVO = mutableMapOf<Symbol, PointVO>()
-    private val pointVOToSymbol = mutableMapOf<PointVO, Symbol>()
-    private val markerLock: ReadWriteLock = ReentrantReadWriteLock()
-    private lateinit var mapViewLifecycleObserver: MapViewLifeCycleBean
+
     companion object {
         private val ID_ICON_LOC = "LOC_ICON_1"
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        exploreViewModel =
-            ViewModelProviders.of(this).get(ExploreViewModel::class.java)
-        val root = inflater.inflate(R.layout.fragment_explore, container, false)
-        mainMap = root.findViewById<MapView>(R.id.mainMap)
-        mainMap.onCreate(savedInstanceState)
-        mapViewLifecycleObserver =
-            MapViewLifeCycleBean(mainMap).apply { lifecycle.addObserver(this) }
-        mainMap.getMapAsync {
-            mapboxMap = it
-            it.setStyle(
-                Style.Builder().fromUri(Style.MAPBOX_STREETS).withImage(
-                    ID_ICON_LOC,
-                    context!!.getDrawable(R.drawable.ic_location_on_accent)!!
-                ), { onMapInit(it) })
-            it.uiSettings.isLogoEnabled = false
-            it.uiSettings.isAttributionEnabled = false
-        }
-        root.findViewById<FloatingActionButton>(R.id.publishButton)
-            .setOnClickListener { onFabClicked() }
-        return root
-    }
 
     fun onFabClicked() {
         findNavController().navigate(ExploreFragmentDirections.actionNavigationExploreToPublishPointFragment())
@@ -93,43 +71,45 @@ class ExploreFragment : Fragment() {
                 toast("需要定位权限")
                 activity?.finish()
             }
-            symbolManager = SymbolManager(mainMap, mapboxMap, style)
-            symbolManager!!.addClickListener {
-                val pointVO = symbolToPointVO[it]!!
+            viewHolder.symbolManager =
+                SymbolManager(viewHolder.mBinding.mainMap, viewHolder.mapboxMap, style)
+            viewHolder.symbolManager!!.addClickListener {
+                val pointVO = viewHolder.symbolToPointVO[it]!!
                 findNavController().navigate(
                     ExploreFragmentDirections.actionNavigationExploreToPointInfoFragment(
                         pointVO.pointId
                     )
                 )
             }
-            locationComponent = mapboxMap.locationComponent
-            locationComponent.activateLocationComponent(
+            viewHolder.locationComponent = viewHolder.mapboxMap.locationComponent
+            viewHolder.locationComponent.activateLocationComponent(
                 LocationComponentActivationOptions.builder(
                     context!!,
                     style
                 ).build()
             )
-            locationComponent.isLocationComponentEnabled = true
-            locationComponent.cameraMode = CameraMode.TRACKING
-            locationComponent.renderMode = RenderMode.COMPASS
-            mapboxMap.addOnCameraIdleListener {
-                if (idle) return@addOnCameraIdleListener
-                Log.i("Camera", mapboxMap.cameraPosition.toString())
-                exploreViewModel.viewModelScope.launch {
-                    pointRepository.getPointAround(
+            viewHolder.locationComponent.isLocationComponentEnabled = true
+            viewHolder.locationComponent.cameraMode = CameraMode.TRACKING
+            viewHolder.locationComponent.renderMode = RenderMode.COMPASS
+            viewHolder.mapboxMap.addOnCameraIdleListener {
+                if (viewHolder.idle) return@addOnCameraIdleListener
+                viewHolder.idle = true
+                Log.i("Camera", viewHolder.mapboxMap.cameraPosition.toString())
+                mViewModel.viewModelScope.launch {
+                    viewHolder.pointRepository.getPointAround(
                         "WGS-84",
-                        mapboxMap.cameraPosition.target.latitude,
-                        mapboxMap.cameraPosition.target.longitude
+                        viewHolder.mapboxMap.cameraPosition.target.latitude,
+                        viewHolder.mapboxMap.cameraPosition.target.longitude
                     ).let {
                         when (it) {
                             is UResult.Success -> {
                                 withContext(Dispatchers.Main) {
                                     try {
-                                        markerLock.writeLock().lock()
-                                        points = it.data
+                                        viewHolder.markerLock.writeLock().lock()
+                                        viewHolder.points = it.data
                                         updateMarkers()
                                     } finally {
-                                        markerLock.writeLock().unlock()
+                                        viewHolder.markerLock.writeLock().unlock()
                                     }
                                 }
                             }
@@ -140,59 +120,74 @@ class ExploreFragment : Fragment() {
                     }
                 }
             }
-            mapboxMap.addOnCameraMoveStartedListener {
-                idle = false
+            viewHolder.mapboxMap.addOnCameraMoveStartedListener {
+                viewHolder.idle = false
             }
         }
     }
 
     fun updateMarkers() {
         try {
-            markerLock.writeLock().lock()
-            for (point in points) {
-                if (!(point in pointVOToSymbol)) {
-                    symbolManager!!.create(
+            viewHolder.markerLock.writeLock().lock()
+            for (point in viewHolder.points) {
+                if (!(point in viewHolder.pointVOToSymbol)) {
+                    viewHolder.symbolManager!!.create(
                         SymbolOptions().withIconImage(ID_ICON_LOC).withIconAnchor(ICON_ANCHOR_BOTTOM).withLatLng(
                             LatLng(point.location.latitude, point.location.longitude)
                         )
                     ).apply {
-                        symbolToPointVO.put(this, point)
-                        pointVOToSymbol.put(point, this)
+                        viewHolder.symbolToPointVO.put(this, point)
+                        viewHolder.pointVOToSymbol.put(point, this)
                     }
                 } else {
 
                 }
             }
-            with(symbolToPointVO.iterator()) {
+            with(viewHolder.symbolToPointVO.iterator()) {
                 forEach {
                     val pointVO = it.value
-                    if (!(pointVO in points)) {
-                        symbolManager!!.delete(it.key)
+                    if (!(pointVO in viewHolder.points)) {
+                        viewHolder.symbolManager!!.delete(it.key)
                         remove()
-                        pointVOToSymbol.remove(pointVO)
+                        viewHolder.pointVOToSymbol.remove(pointVO)
                     }
                 }
             }
         } finally {
-            markerLock.writeLock().unlock()
+            viewHolder.markerLock.writeLock().unlock()
         }
 
     }
 
+    override fun createViewHolder(): ViewHolder = ViewHolder()
 
-    override fun onDestroyView() {
-        locationComponent.isLocationComponentEnabled = false
-        mainMap.onDestroy()
-        Log.d(this.javaClass.simpleName, "View Destroyed")
-        super.onDestroyView()
+    override fun getLayoutResId(): Int = R.layout.fragment_explore
+
+    override fun initData() {
+        viewHolder.mBinding.viewModel = mViewModel
     }
 
-    override fun onPause() {
-        //mainMap.onPause()
-        symbolManager?.deleteAll()
-        symbolToPointVO.clear()
-        pointVOToSymbol.clear()
-        super.onPause()
+    override fun initView(savedInstanceState: Bundle?) {
+        viewHolder.mBinding.mainMap.onCreate(savedInstanceState)
+        viewHolder.mapViewLifecycleObserver =
+            MapViewLifeCycleBean(viewHolder.mBinding.mainMap).apply {
+                viewHolder.lifecycle.addObserver(
+                    this
+                )
+            }
+        viewHolder.mBinding.mainMap.getMapAsync {
+            viewHolder.mapboxMap = it
+            it.setStyle(
+                Style.Builder().fromUri(Style.MAPBOX_STREETS).withImage(
+                    ID_ICON_LOC,
+                    context!!.getDrawable(R.drawable.ic_location_on_accent)!!
+                ), { onMapInit(it) })
+            it.uiSettings.isLogoEnabled = false
+            it.uiSettings.isAttributionEnabled = false
+        }
+        viewHolder.mBinding.publishButton.setOnClickListener {
+            onFabClicked()
+        }
     }
 
 

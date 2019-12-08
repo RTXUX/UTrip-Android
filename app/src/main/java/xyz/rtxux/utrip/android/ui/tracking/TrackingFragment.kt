@@ -24,66 +24,70 @@ import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import xyz.rtxux.utrip.android.R
-import xyz.rtxux.utrip.android.base.BaseVMFragment
+import xyz.rtxux.utrip.android.base.BaseCachingFragment
+import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
 import xyz.rtxux.utrip.android.databinding.TrackingFragmentBinding
 import xyz.rtxux.utrip.android.model.realm.MyPoint
 
-class TrackingFragment : BaseVMFragment<TrackingViewModel, TrackingFragmentBinding>(
-    true,
+class TrackingFragment :
+    BaseCachingFragment<TrackingViewModel, TrackingFragmentBinding, TrackingFragment.ViewHolder>(
     TrackingViewModel::class.java
 ) {
-    override fun getLayoutResId(): Int = R.layout.tracking_fragment
+    class ViewHolder : BaseCachingFragment.ViewHolder<TrackingFragmentBinding>() {
+        lateinit var mapboxMap: MapboxMap
+        lateinit var locationEngine: LocationEngine
+        lateinit var locationComponent: LocationComponent
+        val callback = object : LocationEngineCallback<LocationEngineResult> {
+            override fun onFailure(exception: Exception) {
 
-    private lateinit var mapboxMap: MapboxMap
-    private lateinit var locationEngine: LocationEngine
-    private lateinit var locationComponent: LocationComponent
-    private val callback = object : LocationEngineCallback<LocationEngineResult> {
-        override fun onFailure(exception: Exception) {
+            }
+
+            override fun onSuccess(result: LocationEngineResult?) {
+                result!!
+                locationComponent.forceLocationUpdate(result.lastLocation)
+                mBinding.viewModel?.postPoint(result)
+            }
 
         }
 
-        override fun onSuccess(result: LocationEngineResult?) {
-            result!!
-            locationComponent.forceLocationUpdate(result.lastLocation)
-            mViewModel.postPoint(result)
+        override fun clean() {
 
         }
 
     }
+
+    override fun getLayoutResId(): Int = R.layout.tracking_fragment
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         val ret = super.onCreateView(inflater, container, savedInstanceState)
-        mBinding.viewModel = mViewModel
-        mViewModel.myTrack = mViewModel.createTrack()
-        initMap(savedInstanceState)
-        mBinding.stopTrackingButton.setOnClickListener {
-            mapboxMap.locationComponent.isLocationComponentEnabled = false
-            locationEngine.removeLocationUpdates(callback)
-            findNavController().navigateUp()
-        }
+
+
         return ret
     }
 
     fun initMap(savedInstanceState: Bundle?) {
-        mBinding.trackingMap.onCreate(savedInstanceState)
-        mBinding.trackingMap.getMapAsync {
+        viewHolder.mBinding.trackingMap.onCreate(savedInstanceState)
+        viewHolder.lifecycle.addObserver(MapViewLifeCycleBean(viewHolder.mBinding.trackingMap))
+        viewHolder.mBinding.trackingMap.getMapAsync {
             it.uiSettings.isAttributionEnabled = false
             it.uiSettings.isLogoEnabled = false
-            mapboxMap = it
+            viewHolder.mapboxMap = it
             it.setStyle(Style.MAPBOX_STREETS) {
-                locationComponent = mapboxMap.locationComponent
-                locationComponent.activateLocationComponent(
+                viewHolder.locationComponent = viewHolder.mapboxMap.locationComponent
+                viewHolder.locationComponent.activateLocationComponent(
                     LocationComponentActivationOptions.builder(
                         context!!,
                         it
                     ).build()
                 )
-                locationComponent.isLocationComponentEnabled = true
-                locationComponent.cameraMode = CameraMode.TRACKING
-                locationComponent.renderMode = RenderMode.COMPASS
+                viewHolder.locationComponent.isLocationComponentEnabled = true
+                viewHolder.locationComponent.cameraMode = CameraMode.TRACKING
+                viewHolder.locationComponent.renderMode = RenderMode.COMPASS
                 initLocationEngine()
                 it.addSource(
                     GeoJsonSource(
@@ -100,8 +104,8 @@ class TrackingFragment : BaseVMFragment<TrackingViewModel, TrackingFragmentBindi
                         PropertyFactory.lineColor(Color.parseColor("#e55e5e"))
                     )
                 )
-                mViewModel.myTrack.observe(this, Observer { track ->
-                    mapboxMap.getStyle {
+                mViewModel.myTrack.observe(viewHolder, Observer { track ->
+                    viewHolder.mapboxMap.getStyle {
                         it.getSourceAs<GeoJsonSource>("line-source")
                             ?.setGeoJson(generateFeatureCollection(track.points))
                     }
@@ -118,46 +122,43 @@ class TrackingFragment : BaseVMFragment<TrackingViewModel, TrackingFragmentBindi
 
     fun initLocationEngine() {
 
-        locationEngine = LocationEngineProvider.getBestLocationEngine(context!!)
+        viewHolder.locationEngine = LocationEngineProvider.getBestLocationEngine(context!!)
         val request = LocationEngineRequest.Builder(1000L)
             .setPriority(LocationEngineRequest.PRIORITY_HIGH_ACCURACY).setMaxWaitTime(5000L).build()
-        locationEngine.requestLocationUpdates(request, callback, Looper.getMainLooper())
-        locationEngine.getLastLocation(callback)
+        viewHolder.locationEngine.requestLocationUpdates(
+            request,
+            viewHolder.callback,
+            Looper.getMainLooper()
+        )
+        viewHolder.locationEngine.getLastLocation(viewHolder.callback)
     }
 
-    override fun onStart() {
-        super.onStart()
-        mBinding.trackingMap.onStart()
-    }
 
-    override fun onStop() {
-        mBinding.trackingMap.onStop()
-        super.onStop()
-    }
-
-    override fun onDestroyView() {
-        mBinding.trackingMap.onDestroy()
-        super.onDestroyView()
-    }
-
-    override fun onPause() {
-        mBinding.trackingMap.onPause()
-        super.onPause()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mBinding.trackingMap.onResume()
-    }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        mBinding.trackingMap.onSaveInstanceState(outState)
+        viewHolder.mBinding.trackingMap.onSaveInstanceState(outState)
         super.onSaveInstanceState(outState)
     }
 
     override fun onLowMemory() {
         super.onLowMemory()
-        mBinding.trackingMap.onLowMemory()
+        viewHolder.mBinding.trackingMap.onLowMemory()
+    }
+
+    override fun createViewHolder(): ViewHolder = ViewHolder()
+
+    override fun initData() {
+        viewHolder.mBinding.viewModel = mViewModel
+        mViewModel.myTrack = mViewModel.createTrack()
+    }
+
+    override fun initView(savedInstanceState: Bundle?) {
+        initMap(savedInstanceState)
+        viewHolder.mBinding.stopTrackingButton.setOnClickListener {
+            viewHolder.mapboxMap.locationComponent.isLocationComponentEnabled = false
+            viewHolder.locationEngine.removeLocationUpdates(viewHolder.callback)
+            findNavController().navigateUp()
+        }
     }
 
 

@@ -26,7 +26,7 @@ import com.tbruyelle.rxpermissions2.RxPermissions
 import com.youth.banner.BannerConfig
 import com.youth.banner.loader.ImageLoader
 import xyz.rtxux.utrip.android.R
-import xyz.rtxux.utrip.android.base.BaseVMFragment2
+import xyz.rtxux.utrip.android.base.BaseCachingFragment
 import xyz.rtxux.utrip.android.base.GlideApp
 import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
 import xyz.rtxux.utrip.android.databinding.PointInfoFragmentBinding
@@ -37,33 +37,42 @@ import xyz.rtxux.utrip.android.utils.toast
 import java.text.SimpleDateFormat
 import java.util.*
 
-class PointInfoFragment : BaseVMFragment2<PointInfoViewModel, PointInfoFragmentBinding>(
+class PointInfoFragment :
+    BaseCachingFragment<PointInfoViewModel, PointInfoFragmentBinding, PointInfoFragment.ViewHolder>(
     PointInfoViewModel::class.java
 ) {
     companion object {
         private val ID_ICON_LOC = "LOC_ICON_1"
     }
 
-    private lateinit var mapboxMap: MapboxMap
+    class ViewHolder : BaseCachingFragment.ViewHolder<PointInfoFragmentBinding>() {
+        lateinit var mapboxMap: MapboxMap
+        lateinit var menu: Menu
+        override fun clean() {
+
+        }
+
+    }
+
+
     override fun getLayoutResId(): Int = R.layout.point_info_fragment
     private val args by navArgs<PointInfoFragmentArgs>()
-    private lateinit var menu: Menu
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.point_info_menu, menu)
-        this.menu = menu
+        viewHolder.menu = menu
     }
 
     override fun initView(savedInstanceState: Bundle?) {
-        val binding = mBinding!!
-        lifecycle.addObserver(MapViewLifeCycleBean(binding.infoMap))
+        val binding = viewHolder.mBinding
+        viewHolder.lifecycle.addObserver(MapViewLifeCycleBean(binding.infoMap))
         binding.viewModel = mViewModel
         binding.infoMap.mParentView = binding.layoutScroll
         binding.infoMap.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
         binding.infoMap.getMapAsync {
-            mapboxMap = it
+            viewHolder.mapboxMap = it
             it.setStyle(
                 Style.Builder().fromUri(Style.MAPBOX_STREETS).withImage(
                     ID_ICON_LOC,
@@ -96,24 +105,24 @@ class PointInfoFragment : BaseVMFragment2<PointInfoViewModel, PointInfoFragmentB
 //        mViewModel.userProfile.observe(this, Observer {
 //            GlideApp.with(context!!).load(it.avatarUrl).into(binding.ivAvatar)
 //        })
-        mViewModel.point.observe(this, Observer {
+        mViewModel.point.observe(viewHolder, Observer {
             GlideApp.with(context!!).load("${ApiService.API_BASE}/user/${it.userId}/avatar")
                 .into(binding.ivAvatar)
         })
-        mViewModel.point.observe(this, Observer {
+        mViewModel.point.observe(viewHolder, Observer {
             if (it.userId == RetrofitClient.userId) {
-                val deleteButton = menu.findItem(R.id.menu_btn_delete)
+                val deleteButton = viewHolder.menu.findItem(R.id.menu_btn_delete)
                 deleteButton.isVisible = true
                 deleteButton.setOnMenuItemClickListener {
                     mViewModel.deletePoint()
                     true
                 }
             } else {
-                val deleteButton = menu.findItem(R.id.menu_btn_delete)
+                val deleteButton = viewHolder.menu.findItem(R.id.menu_btn_delete)
                 deleteButton.isVisible = false
             }
         })
-        mViewModel.deleted.observe(this, Observer {
+        mViewModel.deleted.observe(viewHolder, Observer {
             if (it == true) {
                 toast("删除成功")
                 findNavController().navigateUp()
@@ -123,7 +132,7 @@ class PointInfoFragment : BaseVMFragment2<PointInfoViewModel, PointInfoFragmentB
     }
 
     override fun initData() {
-        val binding = mBinding!!
+        val binding = viewHolder.mBinding
         binding.viewModel = mViewModel
         mViewModel.getPointVO(args.pointId)
     }
@@ -135,8 +144,9 @@ class PointInfoFragment : BaseVMFragment2<PointInfoViewModel, PointInfoFragmentB
                 toast("需要定位权限")
                 activity?.finish()
             }
-            val symbolManager = SymbolManager(mBinding!!.infoMap, mapboxMap, style)
-            mViewModel.point.observe(this, Observer {
+            val symbolManager =
+                SymbolManager(viewHolder.mBinding.infoMap, viewHolder.mapboxMap, style)
+            mViewModel.point.observe(viewHolder, Observer {
                 val latLng = LatLng(it.location.latitude, it.location.longitude)
                 symbolManager.create(
                     SymbolOptions()
@@ -144,11 +154,11 @@ class PointInfoFragment : BaseVMFragment2<PointInfoViewModel, PointInfoFragmentB
                         .withIconAnchor(Property.ICON_ANCHOR_BOTTOM)
                         .withIconImage(ID_ICON_LOC)
                 )
-                mapboxMap.animateCamera {
+                viewHolder.mapboxMap.animateCamera {
                     CameraPosition.Builder().target(latLng).build()
                 }
             })
-            val locationComponent = mapboxMap.locationComponent
+            val locationComponent = viewHolder.mapboxMap.locationComponent
             locationComponent.activateLocationComponent(
                 LocationComponentActivationOptions.builder(
                     context!!,
@@ -162,9 +172,6 @@ class PointInfoFragment : BaseVMFragment2<PointInfoViewModel, PointInfoFragmentB
         }
     }
 
-    override fun onDestroy() {
-        mBinding?.infoMap?.onDestroy()
-        super.onDestroy()
-    }
+    override fun createViewHolder(): ViewHolder = ViewHolder()
 
 }

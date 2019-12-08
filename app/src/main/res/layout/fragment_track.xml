@@ -4,6 +4,11 @@
 
     <data>
 
+        <import type="xyz.rtxux.utrip.android.ui.track.TrackViewModel" />
+
+        <variable
+            name="viewModel"
+            type="TrackViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

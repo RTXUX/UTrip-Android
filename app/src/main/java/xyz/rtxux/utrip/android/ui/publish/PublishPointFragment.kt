@@ -23,7 +23,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.rtxux.utrip.android.R
-import xyz.rtxux.utrip.android.base.BaseVMFragment2
+import xyz.rtxux.utrip.android.base.BaseCachingFragment
+import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
 import xyz.rtxux.utrip.android.databinding.PublishPointFragmentBinding
 import xyz.rtxux.utrip.android.model.UResult
 import xyz.rtxux.utrip.android.model.repository.ImageRepository
@@ -33,25 +34,37 @@ import xyz.rtxux.utrip.android.utils.toast
 import xyz.rtxux.utrip.server.model.dto.LocationBean
 import xyz.rtxux.utrip.server.model.dto.PointDTO
 
-class PublishPointFragment : BaseVMFragment2<PublishPointViewModel, PublishPointFragmentBinding>(
+class PublishPointFragment :
+    BaseCachingFragment<PublishPointViewModel, PublishPointFragmentBinding, PublishPointFragment.ViewHolder>(
     PublishPointViewModel::class.java
 ) {
+
+    class ViewHolder : BaseCachingFragment.ViewHolder<PublishPointFragmentBinding>() {
+        val imageList = mutableListOf<Bitmap>()
+        lateinit var mapboxMap: MapboxMap
+
+        override fun clean() {
+
+        }
+
+    }
+
     private val imageRepository by lazy { ImageRepository() }
     private val pointRepository by lazy { PointRepository() }
     override fun getLayoutResId(): Int = R.layout.publish_point_fragment
-    private val imageList = mutableListOf<Bitmap>()
-    private lateinit var mapboxMap: MapboxMap
+
 
 
     fun initMap(savedInstanceState: Bundle?) {
-        val binding = mBinding!!
+        val binding = viewHolder.mBinding
         binding.pickMap.onCreate(savedInstanceState)
+        viewHolder.lifecycle.addObserver(MapViewLifeCycleBean(binding.pickMap))
         binding.pickMap.getMapAsync {
             it.uiSettings.isAttributionEnabled = false
             it.uiSettings.isLogoEnabled = false
-            mapboxMap = it
+            viewHolder.mapboxMap = it
             it.setStyle(Style.MAPBOX_STREETS) {
-                val locationComponent = mapboxMap.locationComponent
+                val locationComponent = viewHolder.mapboxMap.locationComponent
                 locationComponent.activateLocationComponent(
                     LocationComponentActivationOptions.builder(
                         context!!,
@@ -68,7 +81,7 @@ class PublishPointFragment : BaseVMFragment2<PublishPointViewModel, PublishPoint
     override fun initView(savedInstanceState: Bundle?) {
         setHasOptionsMenu(true)
         initMap(savedInstanceState)
-        val binding = mBinding!!
+        val binding = viewHolder.mBinding
         binding.layoutAddimg2.setOnClickListener {
             binding.layoutAddimg.performClick()
         }
@@ -94,7 +107,8 @@ class PublishPointFragment : BaseVMFragment2<PublishPointViewModel, PublishPoint
     }
 
     fun addImg(bitmap: Bitmap) {
-        val binding = mBinding!!
+        val binding = viewHolder.mBinding
+        val imageList = viewHolder.imageList
         imageList.add(bitmap)
         val refreshSv = {
             if (imageList.size >= 5) {
@@ -233,13 +247,13 @@ class PublishPointFragment : BaseVMFragment2<PublishPointViewModel, PublishPoint
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val binding = mBinding!!
+        val binding = viewHolder.mBinding
         when (item.itemId) {
             R.id.buttonConfirmPublish -> {
                 mViewModel.viewModelScope.launch {
                     val imageIds = mutableListOf<Int>()
                     withContext((Dispatchers.IO)) {
-                        for (image in imageList) {
+                        for (image in viewHolder.imageList) {
                             launch {
                                 val imagePreUploadVO =
                                     (imageRepository.preUploadImage() as UResult.Success).data
@@ -248,7 +262,7 @@ class PublishPointFragment : BaseVMFragment2<PublishPointViewModel, PublishPoint
                             }
                         }
                     }
-                    val target = mapboxMap.cameraPosition.target
+                    val target = viewHolder.mapboxMap.cameraPosition.target
                     val pointDTO = PointDTO(
                         name = binding.name!!,
                         description = binding.content!!,
@@ -276,8 +290,10 @@ class PublishPointFragment : BaseVMFragment2<PublishPointViewModel, PublishPoint
 
 
     override fun initData() {
-        mBinding!!.viewModel = mViewModel
+        viewHolder.mBinding.viewModel = mViewModel
     }
+
+    override fun createViewHolder(): ViewHolder = ViewHolder()
 
 //    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 //        when (requestCode) {

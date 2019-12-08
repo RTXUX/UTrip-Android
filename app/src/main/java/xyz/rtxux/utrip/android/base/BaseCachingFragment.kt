@@ -1,5 +1,6 @@
 package xyz.rtxux.utrip.android.base
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.Looper
 import android.view.LayoutInflater
@@ -14,14 +15,17 @@ import timber.log.Timber
 import java.io.Closeable
 import java.lang.ref.ReferenceQueue
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 abstract class BaseCachingFragment<VM : ViewModel, VB : ViewDataBinding, VH : BaseCachingFragment.ViewHolder<VB>>(
     private val _VMClass: Class<VM>
 ) : Fragment(), CoroutineScope by MainScope() {
-
-    protected lateinit var viewModel: VM
+    protected val pendingActivityResult =
+        ConcurrentHashMap<Int, CompletableDeferred<ActivityResult>>()
+    private var _requestCode = 1000
+    protected lateinit var mViewModel: VM
 
     abstract class ViewHolder<VB : ViewDataBinding> : Closeable, LifecycleOwner {
         lateinit var mBinding: VB
@@ -126,10 +130,10 @@ abstract class BaseCachingFragment<VM : ViewModel, VB : ViewDataBinding, VH : Ba
             //viewHolder.mBinding.lifecycleOwner = viewHolder
             return viewHolder.mBinding.root
         } else {
-            viewModel = ViewModelProviders.of(this).get(_VMClass)
+            mViewModel = ViewModelProviders.of(this).get(_VMClass)
             viewHolder = createViewHolder()
             viewHolder.mBinding =
-                DataBindingUtil.inflate(inflater, getViewResId(), container, false)
+                DataBindingUtil.inflate(inflater, getLayoutResId(), container, false)
             ref = WeakReference(viewHolder, referenceQueue)
             initData()
             initView(savedInstanceState)
@@ -140,7 +144,7 @@ abstract class BaseCachingFragment<VM : ViewModel, VB : ViewDataBinding, VH : Ba
         }
     }
 
-    abstract fun getViewResId(): Int
+    abstract fun getLayoutResId(): Int
 
     abstract fun initData()
 
@@ -152,6 +156,28 @@ abstract class BaseCachingFragment<VM : ViewModel, VB : ViewDataBinding, VH : Ba
         //ref.clear()
         super.onDestroy()
     }
+
+    fun startActivityForResultKtx(
+        intent: Intent,
+        options: Bundle? = null
+    ): CompletableDeferred<ActivityResult> {
+        val result = CompletableDeferred<ActivityResult>()
+        val requestCode = _requestCode++
+        pendingActivityResult.put(requestCode, result)
+        startActivityForResult(intent, requestCode, options)
+        return result
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        val result = pendingActivityResult.get(requestCode)
+        if (result != null) {
+            result.complete(ActivityResult(resultCode, data))
+            pendingActivityResult.remove(requestCode)
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    data class ActivityResult(val resultCode: Int, val data: Intent?)
 
 }
 
