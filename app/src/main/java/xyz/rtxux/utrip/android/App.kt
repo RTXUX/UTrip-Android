@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Context
 import com.mapbox.mapboxsdk.Mapbox
 import io.realm.Realm
-import leakcanary.LeakCanary
+import timber.log.Timber
 import kotlin.properties.Delegates
 
 class App : Application() {
@@ -14,9 +14,8 @@ class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        Timber.plant(Timber.DebugTree())
         CONTEXT = applicationContext
-        LeakCanary.config =
-            LeakCanary.config.copy(retainedVisibleThreshold = 3, dumpHeapWhenDebugging = true)
         Mapbox.getInstance(CONTEXT, getString(R.string.mapbox_access_token))
         Realm.init(CONTEXT)
     }

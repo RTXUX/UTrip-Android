@@ -42,7 +42,7 @@ class MapViewLifeCycleBean(
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
-//        Log.d(this.javaClass.simpleName, "Map Destroyed")
-//        mapViewWeakRef.get()?.onDestroy()
+        Log.d(this.javaClass.simpleName, "Map Destroyed")
+        mapViewWeakRef.get()?.onDestroy()
     }
 }
