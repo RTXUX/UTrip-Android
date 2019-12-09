@@ -66,7 +66,7 @@ class PointInfoFragment :
 
     override fun initView(savedInstanceState: Bundle?) {
         val binding = viewHolder.mBinding
-        viewHolder.lifecycle.addObserver(MapViewLifeCycleBean(binding.infoMap))
+        viewHolder.lifecycleOwner.lifecycle.addObserver(MapViewLifeCycleBean(binding.infoMap))
         binding.viewModel = mViewModel
         binding.infoMap.mParentView = binding.layoutScroll
         binding.infoMap.onCreate(savedInstanceState)
@@ -105,11 +105,11 @@ class PointInfoFragment :
 //        mViewModel.userProfile.observe(this, Observer {
 //            GlideApp.with(context!!).load(it.avatarUrl).into(binding.ivAvatar)
 //        })
-        mViewModel.point.observe(viewHolder, Observer {
+        mViewModel.point.observe(viewHolder.lifecycleOwner, Observer {
             GlideApp.with(context!!).load("${ApiService.API_BASE}/user/${it.userId}/avatar")
                 .into(binding.ivAvatar)
         })
-        mViewModel.point.observe(viewHolder, Observer {
+        mViewModel.point.observe(viewHolder.lifecycleOwner, Observer {
             if (it.userId == RetrofitClient.userId) {
                 val deleteButton = viewHolder.menu.findItem(R.id.menu_btn_delete)
                 deleteButton.isVisible = true
@@ -122,7 +122,7 @@ class PointInfoFragment :
                 deleteButton.isVisible = false
             }
         })
-        mViewModel.deleted.observe(viewHolder, Observer {
+        mViewModel.deleted.observe(viewHolder.lifecycleOwner, Observer {
             if (it == true) {
                 toast("删除成功")
                 findNavController().navigateUp()
@@ -146,7 +146,7 @@ class PointInfoFragment :
             }
             val symbolManager =
                 SymbolManager(viewHolder.mBinding.infoMap, viewHolder.mapboxMap, style)
-            mViewModel.point.observe(viewHolder, Observer {
+            mViewModel.point.observe(viewHolder.lifecycleOwner, Observer {
                 val latLng = LatLng(it.location.latitude, it.location.longitude)
                 symbolManager.create(
                     SymbolOptions()

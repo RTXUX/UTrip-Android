@@ -72,7 +72,7 @@ class TrackingFragment :
 
     fun initMap(savedInstanceState: Bundle?) {
         viewHolder.mBinding.trackingMap.onCreate(savedInstanceState)
-        viewHolder.lifecycle.addObserver(MapViewLifeCycleBean(viewHolder.mBinding.trackingMap))
+        viewHolder.lifecycleOwner.lifecycle.addObserver(MapViewLifeCycleBean(viewHolder.mBinding.trackingMap))
         viewHolder.mBinding.trackingMap.getMapAsync {
             it.uiSettings.isAttributionEnabled = false
             it.uiSettings.isLogoEnabled = false
@@ -104,7 +104,7 @@ class TrackingFragment :
                         PropertyFactory.lineColor(Color.parseColor("#e55e5e"))
                     )
                 )
-                mViewModel.myTrack.observe(viewHolder, Observer { track ->
+                mViewModel.myTrack.observe(viewHolder.lifecycleOwner, Observer { track ->
                     viewHolder.mapboxMap.getStyle {
                         it.getSourceAs<GeoJsonSource>("line-source")
                             ?.setGeoJson(generateFeatureCollection(track.points))

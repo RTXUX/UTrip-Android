@@ -46,7 +46,7 @@ class TrackDetailFragment :
 
     fun initMap(savedInstanceState: Bundle?) {
         viewHolder.mBinding.trackMap.onCreate(savedInstanceState)
-        viewHolder.lifecycle.addObserver(MapViewLifeCycleBean(viewHolder.mBinding.trackMap))
+        viewHolder.lifecycleOwner.lifecycle.addObserver(MapViewLifeCycleBean(viewHolder.mBinding.trackMap))
         viewHolder.mBinding.trackMap.getMapAsync {
             viewHolder.mapboxMap = it
             it.uiSettings.isAttributionEnabled = false

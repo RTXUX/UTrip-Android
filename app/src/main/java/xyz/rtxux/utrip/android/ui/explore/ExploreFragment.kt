@@ -3,8 +3,7 @@ package xyz.rtxux.utrip.android.ui.explore
 import android.Manifest
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.location.LocationComponent
@@ -18,15 +17,11 @@ import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import com.mapbox.mapboxsdk.style.layers.Property.ICON_ANCHOR_BOTTOM
 import com.tbruyelle.rxpermissions2.RxPermissions
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import timber.log.Timber
 import xyz.rtxux.utrip.android.R
 import xyz.rtxux.utrip.android.base.BaseCachingFragment
 import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
 import xyz.rtxux.utrip.android.databinding.FragmentExploreBinding
-import xyz.rtxux.utrip.android.model.UResult
-import xyz.rtxux.utrip.android.model.repository.PointRepository
 import xyz.rtxux.utrip.android.utils.toast
 import xyz.rtxux.utrip.server.model.vo.PointVO
 import java.util.concurrent.locks.ReadWriteLock
@@ -41,9 +36,7 @@ class ExploreFragment :
         lateinit var mapboxMap: MapboxMap
         lateinit var locationComponent: LocationComponent
         var symbolManager: SymbolManager? = null
-        var idle = true
-        var points: List<PointVO> = listOf()
-        val pointRepository by lazy { PointRepository() }
+
         val symbolToPointVO = mutableMapOf<Symbol, PointVO>()
         val pointVOToSymbol = mutableMapOf<PointVO, Symbol>()
         val markerLock: ReadWriteLock = ReentrantReadWriteLock()
@@ -53,6 +46,8 @@ class ExploreFragment :
         }
 
     }
+
+    var idle = true
     @SuppressLint("NotChinaMapView")
 
     companion object {
@@ -92,44 +87,28 @@ class ExploreFragment :
             viewHolder.locationComponent.cameraMode = CameraMode.TRACKING
             viewHolder.locationComponent.renderMode = RenderMode.COMPASS
             viewHolder.mapboxMap.addOnCameraIdleListener {
-                if (viewHolder.idle) return@addOnCameraIdleListener
-                viewHolder.idle = true
-                Log.i("Camera", viewHolder.mapboxMap.cameraPosition.toString())
-                mViewModel.viewModelScope.launch {
-                    viewHolder.pointRepository.getPointAround(
-                        "WGS-84",
-                        viewHolder.mapboxMap.cameraPosition.target.latitude,
-                        viewHolder.mapboxMap.cameraPosition.target.longitude
-                    ).let {
-                        when (it) {
-                            is UResult.Success -> {
-                                withContext(Dispatchers.Main) {
-                                    try {
-                                        viewHolder.markerLock.writeLock().lock()
-                                        viewHolder.points = it.data
-                                        updateMarkers()
-                                    } finally {
-                                        viewHolder.markerLock.writeLock().unlock()
-                                    }
-                                }
-                            }
-                            is UResult.Error -> {
-                                toast(it.exception.message!!)
-                            }
-                        }
-                    }
-                }
+                if (idle) return@addOnCameraIdleListener
+                idle = true
+                Timber.d(viewHolder.mapboxMap.cameraPosition.toString())
+                mViewModel.loadPointAround(
+                    viewHolder.mapboxMap.cameraPosition.target.latitude,
+                    viewHolder.mapboxMap.cameraPosition.target.longitude
+                )
             }
             viewHolder.mapboxMap.addOnCameraMoveStartedListener {
-                viewHolder.idle = false
+                idle = false
             }
+            mViewModel.points.observe(viewHolder.lifecycleOwner, Observer {
+                updateMarkers(it)
+            })
+
         }
     }
 
-    fun updateMarkers() {
+    fun updateMarkers(points: List<PointVO>) {
         try {
             viewHolder.markerLock.writeLock().lock()
-            for (point in viewHolder.points) {
+            for (point in points) {
                 if (!(point in viewHolder.pointVOToSymbol)) {
                     viewHolder.symbolManager!!.create(
                         SymbolOptions().withIconImage(ID_ICON_LOC).withIconAnchor(ICON_ANCHOR_BOTTOM).withLatLng(
@@ -139,14 +118,12 @@ class ExploreFragment :
                         viewHolder.symbolToPointVO.put(this, point)
                         viewHolder.pointVOToSymbol.put(point, this)
                     }
-                } else {
-
                 }
             }
             with(viewHolder.symbolToPointVO.iterator()) {
                 forEach {
                     val pointVO = it.value
-                    if (!(pointVO in viewHolder.points)) {
+                    if (!(pointVO in points)) {
                         viewHolder.symbolManager!!.delete(it.key)
                         remove()
                         viewHolder.pointVOToSymbol.remove(pointVO)
@@ -171,7 +148,7 @@ class ExploreFragment :
         viewHolder.mBinding.mainMap.onCreate(savedInstanceState)
         viewHolder.mapViewLifecycleObserver =
             MapViewLifeCycleBean(viewHolder.mBinding.mainMap).apply {
-                viewHolder.lifecycle.addObserver(
+                viewHolder.lifecycleOwner.lifecycle.addObserver(
                     this
                 )
             }

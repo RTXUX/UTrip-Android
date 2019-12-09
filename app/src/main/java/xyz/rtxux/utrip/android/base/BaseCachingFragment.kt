@@ -27,13 +27,19 @@ abstract class BaseCachingFragment<VM : ViewModel, VB : ViewDataBinding, VH : Ba
     private var _requestCode = 1000
     protected lateinit var mViewModel: VM
 
-    abstract class ViewHolder<VB : ViewDataBinding> : Closeable, LifecycleOwner {
+    abstract class ViewHolder<VB : ViewDataBinding> : Closeable {
         lateinit var mBinding: VB
         private var closed = false
-        val lifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
-
+        //val lifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
+        val lifecycleOwner = object : LifecycleOwner {
+            val lifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
+            override fun getLifecycle(): Lifecycle {
+                return lifecycleRegistry
+            }
+        }
         init {
-            lifecycleRegistry.currentState = Lifecycle.State.INITIALIZED
+            (lifecycleOwner.lifecycle as LifecycleRegistry).currentState =
+                Lifecycle.State.INITIALIZED
         }
 
         protected fun finalize() {
@@ -47,10 +53,12 @@ abstract class BaseCachingFragment<VM : ViewModel, VB : ViewDataBinding, VH : Ba
                 try {
                     if (!closed) {
                         if (Looper.getMainLooper().isCurrentThread) {
-                            lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+                            (lifecycleOwner.lifecycle as LifecycleRegistry).currentState =
+                                Lifecycle.State.DESTROYED
                         } else runBlocking {
                             MainScope().launch {
-                                lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+                                (lifecycleOwner.lifecycle as LifecycleRegistry).currentState =
+                                    Lifecycle.State.DESTROYED
                             }.join()
                         }
                         clean()
@@ -61,9 +69,6 @@ abstract class BaseCachingFragment<VM : ViewModel, VB : ViewDataBinding, VH : Ba
             }
         }
 
-        override fun getLifecycle(): Lifecycle {
-            return lifecycleRegistry
-        }
     }
 
     companion object {
@@ -126,7 +131,7 @@ abstract class BaseCachingFragment<VM : ViewModel, VB : ViewDataBinding, VH : Ba
         if (cRef != null) {
             Timber.d("Reusing previously created view.")
             viewHolder = cRef
-            viewLifecycleOwner.lifecycle.addObserver(ViewLifecycleObserver(viewHolder.lifecycleRegistry))
+            viewLifecycleOwner.lifecycle.addObserver(ViewLifecycleObserver((viewHolder.lifecycleOwner.lifecycle as LifecycleRegistry)))
             //viewHolder.mBinding.lifecycleOwner = viewHolder
             return viewHolder.mBinding.root
         } else {
@@ -137,9 +142,10 @@ abstract class BaseCachingFragment<VM : ViewModel, VB : ViewDataBinding, VH : Ba
             ref = WeakReference(viewHolder, referenceQueue)
             initData()
             initView(savedInstanceState)
-            viewHolder.lifecycleRegistry.currentState = Lifecycle.State.CREATED
-            viewLifecycleOwner.lifecycle.addObserver(ViewLifecycleObserver(viewHolder.lifecycleRegistry))
-            viewHolder.mBinding.lifecycleOwner = viewHolder
+            (viewHolder.lifecycleOwner.lifecycle as LifecycleRegistry).currentState =
+                Lifecycle.State.CREATED
+            viewLifecycleOwner.lifecycle.addObserver(ViewLifecycleObserver((viewHolder.lifecycleOwner.lifecycle as LifecycleRegistry)))
+            viewHolder.mBinding.lifecycleOwner = viewHolder.lifecycleOwner
             return viewHolder.mBinding.root
         }
     }

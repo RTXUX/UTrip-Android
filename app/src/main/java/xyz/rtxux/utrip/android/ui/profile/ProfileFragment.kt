@@ -7,9 +7,6 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
@@ -19,6 +16,7 @@ import xyz.rtxux.utrip.android.R
 import xyz.rtxux.utrip.android.base.BaseCachingFragment
 import xyz.rtxux.utrip.android.base.GlideApp
 import xyz.rtxux.utrip.android.databinding.FragmentProfileBinding
+import xyz.rtxux.utrip.android.model.api.RetrofitClient
 import xyz.rtxux.utrip.android.model.repository.AuthRepository
 import xyz.rtxux.utrip.android.ui.auth.AuthActivity
 import xyz.rtxux.utrip.android.ui.zoomview.ImageZoomActivity
@@ -38,16 +36,6 @@ class ProfileFragment :
     override fun getLayoutResId(): Int = R.layout.fragment_profile
     private val authRepository by lazy { AuthRepository() }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val ret = super.onCreateView(inflater, container, savedInstanceState)
-
-
-        return ret
-    }
 
     fun initAvatarDialog() {
         viewHolder.mBinding.ivAvatar.setOnLongClickListener {
@@ -134,7 +122,7 @@ class ProfileFragment :
             startActivity(Intent(context, AuthActivity::class.java))
             activity?.finish()
         }
-        mViewModel.avatarUrl.observe(viewHolder, Observer {
+        mViewModel.avatarUrl.observe(viewHolder.lifecycleOwner, Observer {
             GlideApp.with(context!!).load(it).into(binding.ivAvatar)
             binding.ivAvatar.setOnClickListener { view ->
                 startActivity(Intent(context, ImageZoomActivity::class.java).apply {
@@ -143,7 +131,11 @@ class ProfileFragment :
             }
         })
         binding.tvUsername.setOnClickListener {
-            findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToProfileEditFragment())
+            findNavController().navigate(
+                ProfileFragmentDirections.actionNavigationProfileToProfileEditFragment(
+                    RetrofitClient.userId
+                )
+            )
         }
         binding.layoutMyPoints.setOnClickListener {
             findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToMyPointFragment())
@@ -153,6 +145,7 @@ class ProfileFragment :
 
     override fun initData() {
         viewHolder.mBinding.viewModel = mViewModel
+        mViewModel.loadUserProfileVO()
         mViewModel.loadAvatar()
     }
 

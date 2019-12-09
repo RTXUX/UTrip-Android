@@ -58,7 +58,7 @@ class PublishPointFragment :
     fun initMap(savedInstanceState: Bundle?) {
         val binding = viewHolder.mBinding
         binding.pickMap.onCreate(savedInstanceState)
-        viewHolder.lifecycle.addObserver(MapViewLifeCycleBean(binding.pickMap))
+        viewHolder.lifecycleOwner.lifecycle.addObserver(MapViewLifeCycleBean(binding.pickMap))
         binding.pickMap.getMapAsync {
             it.uiSettings.isAttributionEnabled = false
             it.uiSettings.isLogoEnabled = false

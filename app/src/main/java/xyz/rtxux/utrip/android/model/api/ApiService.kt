@@ -3,14 +3,10 @@ package xyz.rtxux.utrip.android.model.api
 import okhttp3.ResponseBody
 import retrofit2.http.*
 import xyz.rtxux.utrip.android.base.Dummy
-import xyz.rtxux.utrip.android.model.bean.ApiResponse
-import xyz.rtxux.utrip.android.model.bean.LoginVO
-import xyz.rtxux.utrip.android.model.bean.RegisterDTO
-import xyz.rtxux.utrip.android.model.bean.RegisterVO
+import xyz.rtxux.utrip.android.model.bean.*
 import xyz.rtxux.utrip.server.model.dto.PointDTO
 import xyz.rtxux.utrip.server.model.vo.ImagePreUploadVO
 import xyz.rtxux.utrip.server.model.vo.PointVO
-import xyz.rtxux.utrip.server.model.vo.UserProfileVO
 
 interface ApiService {
     companion object {
@@ -50,6 +46,9 @@ interface ApiService {
     @GET("/user/{id}/profile")
     suspend fun getUserProfileVO(@Path("id") userId: Int): ApiResponse<UserProfileVO>
 
+    @POST("/user/{id}/profile")
+    suspend fun updateUserProfile(@Path("id") userId: Int, @Body userProfileVO: UserProfileVO): ApiResponse<UserProfileVO>
+
     @DELETE("/point/{id}")
     suspend fun deletePoint(@Path("id") pointId: Int): ApiResponse<Dummy>
 
@@ -58,5 +57,5 @@ interface ApiService {
 
     @POST("/user/{id}/avatar")
     @FormUrlEncoded
-    suspend fun setAvatar(@Field("avatarId") avatarId: Int, @Path("id") userId: Int): ApiResponse<UserProfileVO>
+    suspend fun setAvatar(@Field("avatarId") avatarId: Int, @Path("id") userId: Int): ApiResponse<Unit>
 }

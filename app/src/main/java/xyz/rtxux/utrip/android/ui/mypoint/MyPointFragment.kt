@@ -30,7 +30,7 @@ class MyPointFragment :
         viewHolder.adapter = MyPointListAdapter(findNavController())
         binding.rvMyPointList.layoutManager = LinearLayoutManager(context)
         binding.rvMyPointList.adapter = viewHolder.adapter
-        mViewModel.points.observe(viewHolder, Observer {
+        mViewModel.points.observe(viewHolder.lifecycleOwner, Observer {
             viewHolder.adapter.data = it
         })
     }
