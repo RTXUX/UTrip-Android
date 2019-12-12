@@ -119,6 +119,11 @@ class ProfileFragment :
         val binding = viewHolder.mBinding
         binding.buttonLogout.setOnClickListener {
             launch { authRepository.logout() }
+//            try {
+//                Runtime.getRuntime().exec("pm clear ${App.CONTEXT.packageName} HERE")
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//            }
             startActivity(Intent(context, AuthActivity::class.java))
             activity?.finish()
         }

@@ -6,11 +6,13 @@ import com.didichuxing.doraemonkit.DoraemonKit
 import com.mapbox.mapboxsdk.Mapbox
 import io.realm.Realm
 import timber.log.Timber
+import java.io.File
 import kotlin.properties.Delegates
 
 class App : Application() {
     companion object {
         var CONTEXT: Context by Delegates.notNull()
+        lateinit var imageCacheDir: File
     }
 
     override fun onCreate() {
@@ -20,5 +22,7 @@ class App : Application() {
         CONTEXT = applicationContext
         Mapbox.getInstance(CONTEXT, getString(R.string.mapbox_access_token))
         Realm.init(CONTEXT)
+        imageCacheDir = filesDir.toPath().resolve("img_cache").toFile()
+        imageCacheDir.mkdirs()
     }
 }
