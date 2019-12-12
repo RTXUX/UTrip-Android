@@ -3,7 +3,9 @@ package xyz.rtxux.utrip.android.ui.trackdetail
 import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.media.ExifInterface
 import android.net.Uri
 import android.os.Bundle
@@ -11,9 +13,15 @@ import android.view.ActionMode
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.widget.ImageView
+import androidx.core.widget.NestedScrollView
+import androidx.databinding.BindingAdapter
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.LineString
@@ -35,12 +43,17 @@ import kotlinx.coroutines.withContext
 import xyz.rtxux.utrip.android.App
 import xyz.rtxux.utrip.android.R
 import xyz.rtxux.utrip.android.base.BaseCachingFragment
+import xyz.rtxux.utrip.android.base.GlideApp
 import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
 import xyz.rtxux.utrip.android.databinding.TrackDetailFragmentBinding
 import xyz.rtxux.utrip.android.model.realm.MyPoint
+import xyz.rtxux.utrip.android.ui.zoomview.ImageZoomActivity
+import xyz.rtxux.utrip.android.utils.CommonUtils
 import xyz.rtxux.utrip.android.utils.toast
-import java.io.FileInputStream
+import java.io.File
 import java.io.FileOutputStream
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class TrackDetailFragment :
     BaseCachingFragment<TrackDetailViewModel, TrackDetailFragmentBinding, TrackDetailFragment.ViewHolder>(
@@ -51,6 +64,7 @@ class TrackDetailFragment :
         lateinit var mapboxMap: MapboxMap
         lateinit var symbolManager: SymbolManager
         val symbolIdToPointId = mutableMapOf<Long, Int>()
+        lateinit var bottomSheet: BottomSheetBehavior<NestedScrollView>
         override fun clean() {
 
         }
@@ -131,6 +145,7 @@ class TrackDetailFragment :
                 viewHolder.symbolManager =
                     SymbolManager(viewHolder.mBinding.trackMap, viewHolder.mapboxMap, it)
                 mViewModel.markerPoints.observe(viewHolder.lifecycleOwner, Observer {
+                    viewHolder.symbolIdToPointId.clear()
                     viewHolder.symbolManager.deleteAll()
                     it.forEach {
                         viewHolder.symbolManager.create(
@@ -142,6 +157,10 @@ class TrackDetailFragment :
                         }
                     }
                 })
+                viewHolder.symbolManager.addClickListener {
+                    mViewModel.setSelectedPoint(viewHolder.symbolIdToPointId[it.id]!!)
+                    viewHolder.bottomSheet.state = BottomSheetBehavior.STATE_EXPANDED
+                }
             }
         }
     }
@@ -161,6 +180,21 @@ class TrackDetailFragment :
         btnEdit.setOnMenuItemClickListener {
             view!!.startActionMode(actionModeCallback)
             true
+        }
+        menu.findItem(R.id.menu_btn_snapshot).apply {
+            setOnMenuItemClickListener {
+                viewHolder.mapboxMap.snapshot {
+                    val file = File(App.imageCacheDir, "snp.png")
+                    file.createNewFile()
+                    val fos = FileOutputStream(file)
+                    it.compress(Bitmap.CompressFormat.PNG, 100, fos)
+                    fos.close()
+                    startActivity(Intent(context!!, ImageZoomActivity::class.java).apply {
+                        putExtra("url", file.toURI().toString())
+                    })
+                }
+                true
+            }
         }
     }
 
@@ -192,6 +226,9 @@ class TrackDetailFragment :
 
     override fun initView(savedInstanceState: Bundle?) {
         setHasOptionsMenu(true)
+        viewHolder.bottomSheet = BottomSheetBehavior.from(viewHolder.mBinding.bottomSheet).apply {
+            //            state = BottomSheetBehavior.STATE_HIDDEN
+        }
         initMap(savedInstanceState)
         actionModeCallback = ActionModeCallback()
         actionModeCallback.actionItemClickedCallback = { mode, item ->
@@ -233,12 +270,29 @@ class TrackDetailFragment :
                         failCount++
                         continue
                     }
-                    val fileInputStream = FileInputStream(fileDescriptor.fileDescriptor)
-                    val outCacheFile = App.imageCacheDir.toPath().resolve("PIC${i}").toFile()
+
+                    val bitmap = suspendCoroutine<Bitmap> { cont ->
+                        GlideApp.with(context!!).asBitmap().load(clipData.getItemAt(i).uri)
+                            .into(object : CustomTarget<Bitmap>() {
+                                override fun onResourceReady(
+                                    resource: Bitmap,
+                                    transition: Transition<in Bitmap>?
+                                ) {
+                                    cont.resume(resource)
+                                }
+
+                                override fun onLoadCleared(placeholder: Drawable?) = Unit
+
+                            })
+                    }
+
+                    val outCacheFile =
+                        App.imageCacheDir.toPath().resolve("${CommonUtils.randomKey(24)}.png")
+                            .toFile()
                         .apply { createNewFile() }
                     val fileOutputStream = FileOutputStream(outCacheFile)
-                    fileInputStream.copyTo(fileOutputStream)
-                    fileInputStream.close()
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
+                    bitmap.recycle()
                     fileOutputStream.close()
                     fileDescriptor.close()
                     val newPoint = MyPoint().apply {
@@ -255,5 +309,16 @@ class TrackDetailFragment :
 
 
         }
+    }
+
+    object BindingAdapters {
+
+        @JvmStatic
+        @BindingAdapter("app:image_src")
+        fun bindImageSrc(view: ImageView, url: String?) {
+            GlideApp.with(view.context).load(url).into(view)
+        }
+
+
     }
 }

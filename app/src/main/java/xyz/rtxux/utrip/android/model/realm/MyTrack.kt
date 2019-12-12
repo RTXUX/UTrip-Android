@@ -11,7 +11,8 @@ open class MyTrack(
     var description: String,
     var timestamp: Long,
     var points: RealmList<MyPoint>,
-    var completed: Boolean
+    var completed: Boolean,
+    var headerImageUrl: String? = null
 ) : RealmObject() {
     constructor() : this(0, "", "", 0L, RealmList(), false)
 }

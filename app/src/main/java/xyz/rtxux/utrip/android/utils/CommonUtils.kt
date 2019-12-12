@@ -22,4 +22,12 @@ object CommonUtils {
             App.CONTEXT.resources.displayMetrics
         ).toInt()
     }
+
+    fun randomKey(length: Int): String {
+        val chars = "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz0123456789"
+        return (1..length).map {
+            chars.random()
+        }.joinToString("")
+    }
 }
+

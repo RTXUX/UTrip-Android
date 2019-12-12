@@ -36,6 +36,6 @@ class TrackFragment :
         }
         viewHolder.mBinding.rvTrackList.layoutManager = LinearLayoutManager(context)
         viewHolder.mBinding.rvTrackList.adapter =
-            TrackListAdapter(mViewModel.trackList.value!!, findNavController())
+            TrackListAdapter(mViewModel.trackList.value!!, findNavController(), context!!)
     }
 }

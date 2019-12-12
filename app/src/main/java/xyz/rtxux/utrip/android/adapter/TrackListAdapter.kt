@@ -1,14 +1,17 @@
 package xyz.rtxux.utrip.android.adapter
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.navigation.NavController
 import androidx.recyclerview.widget.RecyclerView
 import io.realm.OrderedRealmCollection
 import io.realm.RealmRecyclerViewAdapter
 import xyz.rtxux.utrip.android.R
+import xyz.rtxux.utrip.android.base.GlideApp
 import xyz.rtxux.utrip.android.model.realm.MyTrack
 import xyz.rtxux.utrip.android.ui.track.TrackFragmentDirections
 import java.text.SimpleDateFormat
@@ -16,7 +19,8 @@ import java.util.*
 
 class TrackListAdapter(
     data: OrderedRealmCollection<MyTrack>,
-    val navController: NavController
+    val navController: NavController,
+    val context: Context
 ) : RealmRecyclerViewAdapter<MyTrack, TrackListAdapter.TrackListViewHolder>(data, true) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackListViewHolder {
         return TrackListViewHolder(
@@ -34,6 +38,8 @@ class TrackListAdapter(
         holder.mTvName.text = track.name
         holder.mTvTime.text =
             SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(Date(track.timestamp)).toString()
+        GlideApp.with(context).load(track.headerImageUrl).centerCrop().into(holder.mIvMipmap)
+            .clearOnDetach()
         holder.mTvName.setOnClickListener {
             navController.navigate(TrackFragmentDirections.actionNavigationTrackToTrackDetailFragment(track.id))
         }
@@ -47,5 +53,6 @@ class TrackListAdapter(
         val mTvName: TextView = view.findViewById(R.id.tv_name)
         val mTvTime: TextView = view.findViewById(R.id.tv_time)
         var data: MyTrack? = null
+        val mIvMipmap: ImageView = view.findViewById(R.id.iv_mipmap)
     }
 }

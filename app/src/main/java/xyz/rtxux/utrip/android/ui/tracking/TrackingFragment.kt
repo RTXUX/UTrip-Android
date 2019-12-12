@@ -1,5 +1,6 @@
 package xyz.rtxux.utrip.android.ui.tracking
 
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Looper
@@ -13,6 +14,9 @@ import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
+import com.mapbox.mapboxsdk.geometry.LatLng
+import com.mapbox.mapboxsdk.geometry.LatLngBounds
 import com.mapbox.mapboxsdk.location.LocationComponent
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.modes.CameraMode
@@ -23,11 +27,18 @@ import com.mapbox.mapboxsdk.style.layers.LineLayer
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
+import kotlinx.coroutines.launch
+import xyz.rtxux.utrip.android.App
 import xyz.rtxux.utrip.android.R
 import xyz.rtxux.utrip.android.base.BaseCachingFragment
 import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
 import xyz.rtxux.utrip.android.databinding.TrackingFragmentBinding
 import xyz.rtxux.utrip.android.model.realm.MyPoint
+import xyz.rtxux.utrip.android.utils.CommonUtils
+import java.io.File
+import java.io.FileOutputStream
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class TrackingFragment :
     BaseCachingFragment<TrackingViewModel, TrackingFragmentBinding, TrackingFragment.ViewHolder>(
@@ -157,7 +168,28 @@ class TrackingFragment :
         viewHolder.mBinding.stopTrackingButton.setOnClickListener {
             viewHolder.mapboxMap.locationComponent.isLocationComponentEnabled = false
             viewHolder.locationEngine.removeLocationUpdates(viewHolder.callback)
-            findNavController().navigateUp()
+            launch {
+                LatLngBounds.Builder().includes(
+                    mViewModel.myTrack.value!!.points.map {
+                        LatLng(it.latitude, it.longitude)
+                    }
+                ).build()?.let {
+                    viewHolder.mapboxMap.moveCamera(CameraUpdateFactory.newLatLngBounds(it, 50))
+                }
+                suspendCoroutine<Unit> { continuation ->
+                    viewHolder.mapboxMap.snapshot {
+                        val file = File(App.imageCacheDir, "${CommonUtils.randomKey(24)}.png")
+                        file.createNewFile()
+                        val fos = FileOutputStream(file)
+                        it.compress(Bitmap.CompressFormat.PNG, 100, fos)
+                        fos.close()
+                        mViewModel.setHeaderUrl(file.toURI().toString())
+                        continuation.resume(Unit)
+                    }
+                }
+                findNavController().navigateUp()
+            }
+
         }
     }
 

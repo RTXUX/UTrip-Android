@@ -47,9 +47,21 @@ class TrackingViewModel : ViewModel() {
         }
     }
 
+    fun setHeaderUrl(url: String) {
+        realm.executeTransaction {
+            myTrack.value?.headerImageUrl = url
+        }
+    }
+
+
+
     override fun onCleared() {
-        realm.close()
+        val track = myTrack.value!!
+        if (track.points.size < 2) {
+            track.deleteFromRealm()
+        }
         myTrack = MutableLiveData()
+        realm.close()
         super.onCleared()
     }
 }

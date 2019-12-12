@@ -18,6 +18,8 @@ class TrackDetailViewModel : ViewModel() {
     var trackId: Int = 0
     var markerPoints: LiveData<RealmResults<MyPoint>> = MutableLiveData()
 
+    var selectedPoint: LiveData<MyPoint> = MutableLiveData()
+
     fun loadTrack(trackId: Int) {
         myTrack = realm.where(MyTrack::class.java).equalTo("id", trackId).findFirst()?.asLiveData()?:myTrack
         myTrack.value?.let {
@@ -32,6 +34,24 @@ class TrackDetailViewModel : ViewModel() {
             myTrack.value?.deleteFromRealm()
         }
         myTrack = MutableLiveData()
+    }
+
+    fun setSelectedPoint(id: Int) {
+        selectedPoint.value?.let { point ->
+            realm.executeTransaction {
+                it.copyToRealmOrUpdate(point)
+            }
+        }
+        myTrack.value?.let {
+            (selectedPoint as MutableLiveData).postValue(
+                realm.copyFromRealm(
+                    it.points.where().equalTo(
+                        "id",
+                        id
+                    ).findFirst()
+                )
+            )
+        }
     }
 
     fun persistNewPoint(point: MyPoint) {
