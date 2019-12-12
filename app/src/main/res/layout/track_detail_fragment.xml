@@ -40,18 +40,36 @@
                 android:background="#FFFFFF"
                 android:orientation="vertical">
 
-                <com.google.android.material.textfield.TextInputLayout
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:hint="名称">
+                    android:layout_height="wrap_content">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_name"
-                        android:layout_width="match_parent"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/textInputLayout"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@={viewModel.selectedPoint.name}" />
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:layout_margin="10dp"
+                        android:hint="名称"
+                        app:layout_constraintEnd_toStartOf="@+id/bs_btn_delete"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@={viewModel.selectedPoint.name}" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <ImageButton
+                        android:id="@+id/bs_btn_delete"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_delete_white_24dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/textInputLayout" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
 
                 <ImageView
                     android:id="@+id/iv_image_show"

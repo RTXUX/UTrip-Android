@@ -9,10 +9,7 @@ import android.graphics.drawable.Drawable
 import android.media.ExifInterface
 import android.net.Uri
 import android.os.Bundle
-import android.view.ActionMode
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
+import android.view.*
 import android.widget.ImageView
 import androidx.core.widget.NestedScrollView
 import androidx.databinding.BindingAdapter
@@ -159,7 +156,6 @@ class TrackDetailFragment :
                 })
                 viewHolder.symbolManager.addClickListener {
                     mViewModel.setSelectedPoint(viewHolder.symbolIdToPointId[it.id]!!)
-                    viewHolder.bottomSheet.state = BottomSheetBehavior.STATE_EXPANDED
                 }
             }
         }
@@ -239,6 +235,27 @@ class TrackDetailFragment :
             }
             true
         }
+        viewHolder.mBinding.bsBtnDelete.setOnClickListener {
+            mViewModel.deleteSelectedPoint()
+        }
+        mViewModel.selectedPoint.observe(viewHolder.lifecycleOwner, Observer {
+            if (it != null) {
+                viewHolder.bottomSheet.state = BottomSheetBehavior.STATE_EXPANDED
+            } else {
+                viewHolder.bottomSheet.state = BottomSheetBehavior.STATE_HIDDEN
+            }
+        })
+        viewHolder.bottomSheet.setBottomSheetCallback(object :
+            BottomSheetBehavior.BottomSheetCallback() {
+            override fun onSlide(p0: View, p1: Float) = Unit
+
+            override fun onStateChanged(view: View, state: Int) {
+                if (state == BottomSheetBehavior.STATE_COLLAPSED) {
+                    mViewModel.setSelectedPoint(0)
+                }
+            }
+
+        })
     }
 
 
@@ -255,13 +272,21 @@ class TrackDetailFragment :
                 return@launch
             }
             val resultIntent = result.data!!
-            val clipData = resultIntent.clipData!!
+            val clipData = resultIntent.clipData
             val uris = mutableListOf<Uri>()
+            clipData?.let {
+                for (i in 0 until it.itemCount) {
+                    uris.add(it.getItemAt(i).uri)
+                }
+            }
+            resultIntent.data?.let {
+                uris.add(it)
+            }
             var failCount = 0
             withContext(Dispatchers.IO) {
-                for (i in 0 until clipData.itemCount) {
+                for (uri in uris) {
                     val fileDescriptor = context!!.contentResolver.openFileDescriptor(
-                        clipData.getItemAt(i).uri,
+                        uri,
                         "r"
                     )!!
                     val exifInterface = ExifInterface(fileDescriptor.fileDescriptor)
@@ -272,7 +297,7 @@ class TrackDetailFragment :
                     }
 
                     val bitmap = suspendCoroutine<Bitmap> { cont ->
-                        GlideApp.with(context!!).asBitmap().load(clipData.getItemAt(i).uri)
+                        GlideApp.with(context!!).asBitmap().load(uri)
                             .into(object : CustomTarget<Bitmap>() {
                                 override fun onResourceReady(
                                     resource: Bitmap,
