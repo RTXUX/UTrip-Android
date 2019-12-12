@@ -54,6 +54,9 @@
         <argument
             android:name="pointId"
             app:argType="integer" />
+        <action
+            android:id="@+id/action_pointInfoFragment_to_profileEditFragment"
+            app:destination="@id/profileEditFragment" />
     </fragment>
     <fragment
         android:id="@+id/trackingFragment"

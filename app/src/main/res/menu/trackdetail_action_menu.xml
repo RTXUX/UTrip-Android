@@ -3,6 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/menu_btn_change_name"
+        android:icon="@drawable/ic_edit_while_24dp"
+        android:title="改名"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/menu_btn_bulkadd"
         android:icon="@drawable/ic_add_white_24dp"
         android:title="批量添加"

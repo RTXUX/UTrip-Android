@@ -58,4 +58,14 @@ interface ApiService {
     @POST("/user/{id}/avatar")
     @FormUrlEncoded
     suspend fun setAvatar(@Field("avatarId") avatarId: Int, @Path("id") userId: Int): ApiResponse<Unit>
+
+    @GET("/point/{id}/comment")
+    suspend fun getComment(@Path("id") pointId: Int): ApiResponse<List<CommentVO>>
+
+    @POST("/point/{id}/comment")
+    @FormUrlEncoded
+    suspend fun postComment(@Path("id") pointId: Int, @Field("content") content: String): ApiResponse<CommentVO>
+
+    @DELETE("/point/{id}/comment/{commentId}")
+    suspend fun deleteComment(@Path("id") pointId: Int, @Path("commentId") commentId: Int): ApiResponse<Unit>
 }

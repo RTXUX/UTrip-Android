@@ -4,6 +4,7 @@ import xyz.rtxux.utrip.android.base.BaseRepository
 import xyz.rtxux.utrip.android.base.Dummy
 import xyz.rtxux.utrip.android.model.UResult
 import xyz.rtxux.utrip.android.model.api.RetrofitClient
+import xyz.rtxux.utrip.android.model.bean.CommentVO
 import xyz.rtxux.utrip.server.model.dto.PointDTO
 import xyz.rtxux.utrip.server.model.vo.PointVO
 
@@ -50,6 +51,27 @@ class PointRepository : BaseRepository() {
         return safeApiCall(
             { executeResponse(RetrofitClient.service.findPointByUser(userId)) },
             "未能获取点"
+        )
+    }
+
+    suspend fun getComment(pointId: Int): UResult<List<CommentVO>> {
+        return safeApiCall(
+            { executeResponse(RetrofitClient.service.getComment(pointId)) },
+            "获取评论失败"
+        )
+    }
+
+    suspend fun postComment(pointId: Int, content: String): UResult<CommentVO> {
+        return safeApiCall(
+            { executeResponse(RetrofitClient.service.postComment(pointId, content)) },
+            "发布评论失败"
+        )
+    }
+
+    suspend fun deleteComment(pointId: Int, commentId: Int): UResult<Unit> {
+        return safeApiCall(
+            { executeResponse(RetrofitClient.service.deleteComment(pointId, commentId)) },
+            "删除评论失败"
         )
     }
 }

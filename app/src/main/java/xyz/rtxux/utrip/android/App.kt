@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.Context
 import com.didichuxing.doraemonkit.DoraemonKit
 import com.mapbox.mapboxsdk.Mapbox
+import com.vanniktech.emoji.EmojiManager
+import com.vanniktech.emoji.google.GoogleEmojiProvider
 import io.realm.Realm
 import timber.log.Timber
 import java.io.File
@@ -24,5 +26,6 @@ class App : Application() {
         Realm.init(CONTEXT)
         imageCacheDir = filesDir.toPath().resolve("img_cache").toFile()
         imageCacheDir.mkdirs()
+        EmojiManager.install(GoogleEmojiProvider())
     }
 }

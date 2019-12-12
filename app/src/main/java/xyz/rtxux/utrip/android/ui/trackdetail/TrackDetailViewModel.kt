@@ -54,6 +54,12 @@ class TrackDetailViewModel : ViewModel() {
         }
     }
 
+    fun changeName(name: String) {
+        realm.executeTransaction {
+            myTrack.value?.name = name
+        }
+    }
+
     fun deleteSelectedPoint() {
         val point = selectedPoint.value ?: return
         realm.executeTransaction { realm ->

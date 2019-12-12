@@ -1,5 +1,6 @@
 package xyz.rtxux.utrip.android.ui.profileedit
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import android.view.Menu
@@ -19,6 +20,7 @@ import xyz.rtxux.utrip.android.base.GlideApp
 import xyz.rtxux.utrip.android.databinding.ProfileEditFragmentBinding
 import xyz.rtxux.utrip.android.model.api.ApiService
 import xyz.rtxux.utrip.android.model.api.RetrofitClient
+import xyz.rtxux.utrip.android.ui.zoomview.ImageZoomActivity
 
 class ProfileEditFragment :
     BaseCachingFragment<ProfileEditViewModel, ProfileEditFragmentBinding, ProfileEditFragment.ViewHolder>(
@@ -80,6 +82,14 @@ class ProfileEditFragment :
                 gender = it
             })
         })
+        viewHolder.mBinding.ivFace.setOnClickListener {
+            startActivity(Intent(context!!, ImageZoomActivity::class.java).apply {
+                putExtra(
+                    "url",
+                    "${ApiService.API_BASE}/user/${mViewModel.userProfileVO.value!!.userId}/avatar"
+                )
+            })
+        }
     }
 
     private fun updateProfile() {

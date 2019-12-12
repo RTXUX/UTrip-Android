@@ -7,10 +7,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
+import android.view.View
 import android.widget.ImageView
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.request.RequestOptions
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.geometry.LatLng
@@ -23,6 +25,7 @@ import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.tbruyelle.rxpermissions2.RxPermissions
+import com.vanniktech.emoji.EmojiPopup
 import com.youth.banner.BannerConfig
 import com.youth.banner.loader.ImageLoader
 import xyz.rtxux.utrip.android.R
@@ -48,6 +51,7 @@ class PointInfoFragment :
     class ViewHolder : BaseCachingFragment.ViewHolder<PointInfoFragmentBinding>() {
         lateinit var mapboxMap: MapboxMap
         lateinit var menu: Menu
+        lateinit var commentAdapter: CommentAdapter
         override fun clean() {
 
         }
@@ -66,6 +70,7 @@ class PointInfoFragment :
 
     override fun initView(savedInstanceState: Bundle?) {
         val binding = viewHolder.mBinding
+        initCommentRecyclerView()
         viewHolder.lifecycleOwner.lifecycle.addObserver(MapViewLifeCycleBean(binding.infoMap))
         binding.viewModel = mViewModel
         binding.infoMap.mParentView = binding.layoutScroll
@@ -108,6 +113,13 @@ class PointInfoFragment :
         mViewModel.point.observe(viewHolder.lifecycleOwner, Observer {
             GlideApp.with(context!!).load("${ApiService.API_BASE}/user/${it.userId}/avatar")
                 .into(binding.ivAvatar)
+            viewHolder.mBinding.ivAvatar.setOnClickListener { _ ->
+                findNavController().navigate(
+                    PointInfoFragmentDirections.actionPointInfoFragmentToProfileEditFragment(
+                        it.userId
+                    )
+                )
+            }
         })
         mViewModel.point.observe(viewHolder.lifecycleOwner, Observer {
             if (it.userId == RetrofitClient.userId) {
@@ -129,6 +141,10 @@ class PointInfoFragment :
             }
 
         })
+        mViewModel.point.observe(viewHolder.lifecycleOwner, Observer {
+            mViewModel.fetchComment()
+        })
+
     }
 
     override fun initData() {
@@ -173,5 +189,36 @@ class PointInfoFragment :
     }
 
     override fun createViewHolder(): ViewHolder = ViewHolder()
+
+    private fun initCommentRecyclerView() {
+        viewHolder.mBinding.infoMap.visibility = View.GONE
+        val adapter = CommentAdapter()
+        viewHolder.commentAdapter = adapter
+        viewHolder.mBinding.rvComment.layoutManager = LinearLayoutManager(context!!)
+        viewHolder.mBinding.rvComment.adapter = adapter
+        mViewModel.comments.observe(viewHolder.lifecycleOwner, Observer {
+            adapter.comments = it
+        })
+        adapter.deleteListener = {
+            mViewModel.deleteComment(it)
+        }
+        viewHolder.mBinding.layoutSend.setOnClickListener {
+            if (viewHolder.mBinding.inputText.text.toString().isBlank()) {
+                viewHolder.mBinding.inputText.error = "空"
+            } else {
+                mViewModel.postComment(viewHolder.mBinding.inputText.text.toString())
+                viewHolder.mBinding.inputText.text?.clear()
+            }
+        }
+        val emojiPopup = EmojiPopup.Builder.fromRootView(viewHolder.mBinding.root)
+            .build(viewHolder.mBinding.inputText)
+        viewHolder.mBinding.layoutEmoji.setOnClickListener {
+            if (emojiPopup.isShowing) {
+                emojiPopup.dismiss()
+            } else {
+                emojiPopup.toggle()
+            }
+        }
+    }
 
 }

@@ -83,6 +83,7 @@ dependencies {
     implementation "com.jsibbold:zoomage:1.3.0"
     implementation 'com.jakewharton.timber:timber:4.7.1'
     implementation 'de.hdodenhof:circleimageview:3.0.1'
+    implementation 'com.vanniktech:emoji-google:0.6.0'
     debugImplementation "com.didichuxing.doraemonkit:doraemonkit:$dokit_version"
     releaseImplementation "com.didichuxing.doraemonkit:doraemonkit-no-op:$dokit_version"
     debugImplementation "com.didichuxing.doraemonkit:doraemonkit-aop:$dokit_version"

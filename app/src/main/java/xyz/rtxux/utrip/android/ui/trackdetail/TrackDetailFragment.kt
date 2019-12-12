@@ -9,8 +9,11 @@ import android.graphics.drawable.Drawable
 import android.media.ExifInterface
 import android.net.Uri
 import android.os.Bundle
+import android.text.InputType
 import android.view.*
+import android.widget.EditText
 import android.widget.ImageView
+import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.NestedScrollView
 import androidx.databinding.BindingAdapter
 import androidx.lifecycle.Observer
@@ -223,7 +226,7 @@ class TrackDetailFragment :
     override fun initView(savedInstanceState: Bundle?) {
         setHasOptionsMenu(true)
         viewHolder.bottomSheet = BottomSheetBehavior.from(viewHolder.mBinding.bottomSheet).apply {
-            //            state = BottomSheetBehavior.STATE_HIDDEN
+            state = BottomSheetBehavior.STATE_HIDDEN
         }
         initMap(savedInstanceState)
         actionModeCallback = ActionModeCallback()
@@ -231,6 +234,9 @@ class TrackDetailFragment :
             when (item?.itemId) {
                 R.id.menu_btn_bulkadd -> {
                     bulkAdd()
+                }
+                R.id.menu_btn_change_name -> {
+                    showSetNameDialog()
                 }
             }
             true
@@ -254,7 +260,6 @@ class TrackDetailFragment :
                     mViewModel.setSelectedPoint(0)
                 }
             }
-
         })
     }
 
@@ -334,6 +339,21 @@ class TrackDetailFragment :
 
 
         }
+    }
+
+    fun showSetNameDialog() {
+        val builder = AlertDialog.Builder(context!!)
+        val editText = EditText(context!!)
+        editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_NORMAL
+        builder.setView(editText)
+        builder.setPositiveButton("确定") { _, _ ->
+            val text = editText.text.toString()
+            mViewModel.changeName(text)
+        }
+        builder.setNegativeButton("取消") { dialog, _ ->
+            dialog.cancel()
+        }
+        builder.show()
     }
 
     object BindingAdapters {

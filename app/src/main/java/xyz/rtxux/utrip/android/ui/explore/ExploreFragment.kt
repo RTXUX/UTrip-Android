@@ -17,7 +17,6 @@ import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import com.mapbox.mapboxsdk.style.layers.Property.ICON_ANCHOR_BOTTOM
 import com.tbruyelle.rxpermissions2.RxPermissions
-import timber.log.Timber
 import xyz.rtxux.utrip.android.R
 import xyz.rtxux.utrip.android.base.BaseCachingFragment
 import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
@@ -87,9 +86,9 @@ class ExploreFragment :
             viewHolder.locationComponent.cameraMode = CameraMode.TRACKING
             viewHolder.locationComponent.renderMode = RenderMode.COMPASS
             viewHolder.mapboxMap.addOnCameraIdleListener {
+                if (view == null) return@addOnCameraIdleListener
                 if (idle) return@addOnCameraIdleListener
                 idle = true
-                Timber.d(viewHolder.mapboxMap.cameraPosition.toString())
                 mViewModel.loadPointAround(
                     viewHolder.mapboxMap.cameraPosition.target.latitude,
                     viewHolder.mapboxMap.cameraPosition.target.longitude
@@ -145,6 +144,7 @@ class ExploreFragment :
     }
 
     override fun initView(savedInstanceState: Bundle?) {
+        val viewHolder = this.viewHolder
         viewHolder.mBinding.mainMap.onCreate(savedInstanceState)
         viewHolder.mapViewLifecycleObserver =
             MapViewLifeCycleBean(viewHolder.mBinding.mainMap).apply {
