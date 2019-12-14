@@ -1,4 +1,4 @@
-package xyz.rtxux.utrip.server.model.vo
+package xyz.rtxux.utrip.android.model.bean
 
 data class ImagePreUploadVO(
     val id: Int,

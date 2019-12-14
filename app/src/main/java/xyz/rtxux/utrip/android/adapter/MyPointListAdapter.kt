@@ -11,8 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import xyz.rtxux.utrip.android.R
 import xyz.rtxux.utrip.android.base.GlideApp
 import xyz.rtxux.utrip.android.model.api.ApiService
+import xyz.rtxux.utrip.android.model.bean.PointVO
 import xyz.rtxux.utrip.android.ui.mypoint.MyPointFragmentDirections
-import xyz.rtxux.utrip.server.model.vo.PointVO
 import java.text.SimpleDateFormat
 import java.util.*
 

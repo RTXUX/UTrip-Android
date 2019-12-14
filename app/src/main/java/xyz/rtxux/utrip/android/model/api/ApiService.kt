@@ -4,14 +4,11 @@ import okhttp3.ResponseBody
 import retrofit2.http.*
 import xyz.rtxux.utrip.android.base.Dummy
 import xyz.rtxux.utrip.android.model.bean.*
-import xyz.rtxux.utrip.server.model.dto.PointDTO
-import xyz.rtxux.utrip.server.model.vo.ImagePreUploadVO
-import xyz.rtxux.utrip.server.model.vo.PointVO
 
 interface ApiService {
     companion object {
         //const val API_BASE = "http://api.utrip.rtxux.xyz:4399"
-        const val API_BASE = "http://api.utrip.rtxux.xyz:4400"
+        const val API_BASE = "https://api.utrip.rtxux.xyz"
     }
 
     @GET("/auth/validate")

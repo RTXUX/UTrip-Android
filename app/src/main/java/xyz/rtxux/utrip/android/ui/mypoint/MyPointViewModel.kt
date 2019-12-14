@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import xyz.rtxux.utrip.android.model.UResult
 import xyz.rtxux.utrip.android.model.api.RetrofitClient
+import xyz.rtxux.utrip.android.model.bean.PointVO
 import xyz.rtxux.utrip.android.model.repository.PointRepository
-import xyz.rtxux.utrip.server.model.vo.PointVO
 
 class MyPointViewModel : ViewModel() {
 

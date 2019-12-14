@@ -27,12 +27,12 @@ import xyz.rtxux.utrip.android.base.BaseCachingFragment
 import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
 import xyz.rtxux.utrip.android.databinding.PublishPointFragmentBinding
 import xyz.rtxux.utrip.android.model.UResult
+import xyz.rtxux.utrip.android.model.bean.LocationBean
+import xyz.rtxux.utrip.android.model.bean.PointDTO
 import xyz.rtxux.utrip.android.model.repository.ImageRepository
 import xyz.rtxux.utrip.android.model.repository.PointRepository
 import xyz.rtxux.utrip.android.utils.CommonUtils
 import xyz.rtxux.utrip.android.utils.toast
-import xyz.rtxux.utrip.server.model.dto.LocationBean
-import xyz.rtxux.utrip.server.model.dto.PointDTO
 
 class PublishPointFragment :
     BaseCachingFragment<PublishPointViewModel, PublishPointFragmentBinding, PublishPointFragment.ViewHolder>(

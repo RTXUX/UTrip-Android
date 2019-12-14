@@ -5,8 +5,8 @@ import xyz.rtxux.utrip.android.base.Dummy
 import xyz.rtxux.utrip.android.model.UResult
 import xyz.rtxux.utrip.android.model.api.RetrofitClient
 import xyz.rtxux.utrip.android.model.bean.CommentVO
-import xyz.rtxux.utrip.server.model.dto.PointDTO
-import xyz.rtxux.utrip.server.model.vo.PointVO
+import xyz.rtxux.utrip.android.model.bean.PointDTO
+import xyz.rtxux.utrip.android.model.bean.PointVO
 
 class PointRepository : BaseRepository() {
 

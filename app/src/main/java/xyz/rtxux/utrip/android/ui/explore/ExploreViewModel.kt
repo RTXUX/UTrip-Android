@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import xyz.rtxux.utrip.android.model.UResult
+import xyz.rtxux.utrip.android.model.bean.PointVO
 import xyz.rtxux.utrip.android.model.repository.PointRepository
-import xyz.rtxux.utrip.server.model.vo.PointVO
 
 class ExploreViewModel : ViewModel() {
 

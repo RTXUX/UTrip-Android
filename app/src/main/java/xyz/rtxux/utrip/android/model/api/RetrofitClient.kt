@@ -3,6 +3,7 @@ package xyz.rtxux.utrip.android.model.api
 import com.franmontiel.persistentcookiejar.PersistentCookieJar
 import com.franmontiel.persistentcookiejar.cache.SetCookieCache
 import com.franmontiel.persistentcookiejar.persistence.SharedPrefsCookiePersistor
+import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -24,6 +25,12 @@ object RetrofitClient {
         cookieJar.clear()
     }
 
+    val certificatePinner by lazy {
+        CertificatePinner.Builder()
+            .add("api.utrip.rtxux.xyz", "sha256/bupIWki8bCz32yHk1gJuwSC2ZhujBXLzNch2WYG+OWQ=")
+            .build()
+    }
+
     var userId: Int = 0
 
     val service by lazy {
@@ -40,6 +47,7 @@ object RetrofitClient {
             val builder = OkHttpClient.Builder()
             val logging = HttpLoggingInterceptor()
             logging.level = HttpLoggingInterceptor.Level.BODY
+            builder.certificatePinner(certificatePinner)
             builder.addInterceptor(logging)
             builder.addInterceptor { chain ->
                 val request =

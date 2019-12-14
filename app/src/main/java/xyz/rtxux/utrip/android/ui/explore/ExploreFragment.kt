@@ -21,8 +21,8 @@ import xyz.rtxux.utrip.android.R
 import xyz.rtxux.utrip.android.base.BaseCachingFragment
 import xyz.rtxux.utrip.android.base.MapViewLifeCycleBean
 import xyz.rtxux.utrip.android.databinding.FragmentExploreBinding
+import xyz.rtxux.utrip.android.model.bean.PointVO
 import xyz.rtxux.utrip.android.utils.toast
-import xyz.rtxux.utrip.server.model.vo.PointVO
 import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 

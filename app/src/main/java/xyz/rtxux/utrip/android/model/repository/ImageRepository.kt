@@ -10,7 +10,7 @@ import xyz.rtxux.utrip.android.model.UResult
 import xyz.rtxux.utrip.android.model.api.QiniuApiService
 import xyz.rtxux.utrip.android.model.api.RetrofitClient
 import xyz.rtxux.utrip.android.model.bean.ApiResponse
-import xyz.rtxux.utrip.server.model.vo.ImagePreUploadVO
+import xyz.rtxux.utrip.android.model.bean.ImagePreUploadVO
 import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException

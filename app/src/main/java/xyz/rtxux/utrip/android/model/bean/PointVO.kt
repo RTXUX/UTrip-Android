@@ -1,6 +1,4 @@
-package xyz.rtxux.utrip.server.model.vo
-
-import xyz.rtxux.utrip.server.model.dto.LocationBean
+package xyz.rtxux.utrip.android.model.bean
 
 data class PointVO(
     val pointId: Int,

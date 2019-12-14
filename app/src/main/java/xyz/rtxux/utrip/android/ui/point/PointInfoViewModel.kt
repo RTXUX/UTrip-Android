@@ -8,10 +8,10 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import xyz.rtxux.utrip.android.model.UResult
 import xyz.rtxux.utrip.android.model.bean.CommentVO
+import xyz.rtxux.utrip.android.model.bean.PointVO
 import xyz.rtxux.utrip.android.model.bean.UserProfileVO
 import xyz.rtxux.utrip.android.model.repository.PointRepository
 import xyz.rtxux.utrip.android.model.repository.UserProfileRepository
-import xyz.rtxux.utrip.server.model.vo.PointVO
 
 class PointInfoViewModel : ViewModel() {
     private val pointRepository by lazy { PointRepository() }

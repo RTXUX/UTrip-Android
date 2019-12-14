@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.Drawable
+import android.location.Location
 import android.media.ExifInterface
 import android.net.Uri
 import android.os.Bundle
@@ -260,6 +261,14 @@ class TrackDetailFragment :
                     mViewModel.setSelectedPoint(0)
                 }
             }
+        })
+        mViewModel.selectedPoint.observe(viewHolder.lifecycleOwner, Observer {
+            it ?: return@Observer
+            val tvLocation = viewHolder.mBinding.tvLocation
+            val lat = Location.convert(it.latitude, Location.FORMAT_SECONDS).split(':')
+            val lng = Location.convert(it.longitude, Location.FORMAT_SECONDS).split(':')
+            val text = "纬度：${lat[0]}°${lat[1]}'${lat[2]}''  纬度${lng[0]}°${lng[1]}'${lng[2]}''"
+            tvLocation.text = text
         })
     }
 

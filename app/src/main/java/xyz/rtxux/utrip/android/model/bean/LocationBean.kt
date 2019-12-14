@@ -1,4 +1,4 @@
-package xyz.rtxux.utrip.server.model.dto
+package xyz.rtxux.utrip.android.model.bean
 
 data class LocationBean(
     val coordinateType: String,

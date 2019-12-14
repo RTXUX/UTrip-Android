@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+//apply plugin: 'com.preemptive.dasho.android'
 
 apply plugin: 'kotlin-android'
 
@@ -32,12 +33,23 @@ android {
     }
     buildTypes {
         release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
             minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     dataBinding {
         enabled = true
+    }
+    lintOptions {
+        checkReleaseBuilds false
+        //If you want to continue even if errors found use following line
+        abortOnError false
     }
 }
 
@@ -57,7 +69,7 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment-ktx:2.1.0'
     implementation 'androidx.navigation:navigation-ui-ktx:2.1.0'
     implementation "androidx.recyclerview:recyclerview:$recyclerview_version"
-    implementation "androidx.recyclerview:recyclerview-selection:$recyclerview_version"
+    implementation "androidx.recyclerview:recyclerview-selection:1.0.0"
     implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
     implementation "com.squareup.okhttp3:logging-interceptor:$okhttp_version"
     implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
@@ -84,11 +96,21 @@ dependencies {
     implementation 'com.jakewharton.timber:timber:4.7.1'
     implementation 'de.hdodenhof:circleimageview:3.0.1'
     implementation 'com.vanniktech:emoji-google:0.6.0'
-    debugImplementation "com.didichuxing.doraemonkit:doraemonkit:$dokit_version"
-    releaseImplementation "com.didichuxing.doraemonkit:doraemonkit-no-op:$dokit_version"
     debugImplementation "com.didichuxing.doraemonkit:doraemonkit-aop:$dokit_version"
     // debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
+
+
+//dasho {
+//     debug true
+//     doxFilename "project.dox"
+//     enabledBuildVariants "release"
+////     excludeFromProtection null //See docs for details
+//     home 'C:/Program Files/PreEmptive Protection DashO 10.1/app' // for more information about DashO Home see the User Guide
+//     javaOptions "-Xmx1024M", "-Xms512M" //Normally has no default values
+//     //searchVersion "10"
+//     verbose true
+//}
